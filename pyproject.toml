@@ -12,6 +12,7 @@ requests = "^2.31.0"
 gql = "^3.5.0"
 pydantic = "^2.7.0"
 tenacity = "^8.2.3"
+requests-toolbelt = "^1.0.0"
 
 
 [build-system]
