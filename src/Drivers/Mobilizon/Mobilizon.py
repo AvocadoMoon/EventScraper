@@ -3,8 +3,8 @@ from gql.transport.requests import RequestsHTTPTransport
 from gql.transport.exceptions import TransportQueryError
 from requests.exceptions import HTTPError
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
-from src.Drivers.Mobilizon.GQLRequests import EventGQL, AuthenticationGQL
-from src.Drivers.Mobilizon.MobilizonTypes import EventType
+from Drivers.Mobilizon.GQLRequests import EventGQL, AuthenticationGQL
+from Drivers.Mobilizon.mobilizon_types import EventType
 
 
 def _build_client(endpoint, bearer=None):
