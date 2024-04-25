@@ -1,72 +1,78 @@
-import gql
+from gql import gql
+from src.Drivers.Mobilizon.MobilizonTypes import EventType
+
+
+# EventType = MobilizonTypes.EventType
 # https://github.com/framasoft/mobilizon/blob/main/docs/dev.md
+
 
 # ==== GQL : Events ====
 class EventGQL:
-  def createEventGQL(eventInformation: EventType):
-    gqlString = f"""
-    mutation createEvent {{
-      organizerActorId: {eventInformation.organizerActorId}, 
-      attributedToId: {eventInformation.attributedToId}, 
-      title: {eventInformation.title}, 
-      description: {eventInformation.description}, 
-      beginsOn: {eventInformation.beginsOn}, 
-      endsOn: {eventInformation.endsOn}, 
-      status: {eventInformation.status}, 
-      visibility: {eventInformation.visibility}, 
-      joinOptions: {eventInformation.joinOptions}, 
-      draft: {eventInformation.draft}, 
-      tags: {eventInformation.tags},
-      picture: {eventInformation.picture}, 
-      onlineAddress: {eventInformation.onlineAddress}, 
-      phoneAddress: {eventInformation.phoneAddress}, 
-      category: {eventInformation.category}, 
-      physicalAddress: {eventInformation.physicalAddress}, 
-      options: {eventInformation.options}, 
-      contacts: {eventInformation.contacts}
-      {{
-        id
-        uuid
-      }}
-    }}
+    def createEventGQL(eventInformation: EventType):
+        gqlString = f"""
+        mutation {{ createEvent(
+          organizerActorId: {eventInformation.organizerActorId}, 
+          attributedToId: {eventInformation.attributedToId}, 
+          title: {eventInformation.title}, 
+          description: {eventInformation.description}, 
+          beginsOn: {eventInformation.beginsOn}, 
+          endsOn: {eventInformation.endsOn}, 
+          status: {eventInformation.status}, 
+          visibility: {eventInformation.visibility}, 
+          joinOptions: {eventInformation.joinOptions}, 
+          draft: {eventInformation.draft}, 
+          tags: {eventInformation.tags},
+          picture: {eventInformation.picture}, 
+          onlineAddress: {eventInformation.onlineAddress}, 
+          phoneAddress: {eventInformation.phoneAddress}, 
+          category: {eventInformation.category}, 
+          physicalAddress: {eventInformation.physicalAddress}, 
+          options: {eventInformation.options}, 
+          contacts: {eventInformation.contacts}
+          )
+          }}
+            id
+            uuid
+          }}
+        }}
     """
-    return gql(gqlString)
-
-  
+        return gql(gqlString)
 
 
 # ==== GQL : credentials ====
 
+
 class AuthenticationGQL:
-  def loginGQL(email, password):
-    gqlString = f"""
-      mutation login {{
+    def loginGQL(email, password):
+        gqlString = f"""
+      mutation {{
+      login(
       email: {email}, 
-      password: {password} {{
+      password: {password}) {{
         accessToken   
         refreshToken
       }}
     }}
     """
-    return gql(gqlString)
-  
-  def logoutGQL(refreshToken):
-    gqlString = f"""
-      mutation logout {{
-      refreshToken: {refreshToken}
+        return gql(gqlString)
+
+    def logoutGQL(refreshToken):
+        gqlString = f"""
+      mutation {{
+      logout(refreshToken: {refreshToken})
     }}
     """
-    return gql(gqlString)
-  
-  def refreshTokenGQL(refreshToken):
-    gqlString = f"""
-      mutation RefreshToken {{
-      refreshToken: {refreshToken} {{
+        return gql(gqlString)
+
+    def refreshTokenGQL(refreshToken):
+        gqlString = f"""
+      mutation {{ RefreshToken(
+      refreshToken: {refreshToken}) {{
 	    accessToken   
       refreshToken
       }}
     }}"""
-    return gql(gqlString)
+        return gql(gqlString)
 
 
 # UPDATE_GQL = gql("""
@@ -165,7 +171,7 @@ class AuthenticationGQL:
 # 		actor { ...ActorFragment }
 # 		parent { ...ActorFragment }
 # 	  }
-# 	}     
+# 	}
 #   }
 # }
 # fragment ActorFragment on Actor {  id type  preferredUsername  name }
