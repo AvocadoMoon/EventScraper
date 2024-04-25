@@ -1,5 +1,5 @@
 from gql import gql
-from Drivers.Mobilizon.mobilizon_types import EventType
+from drivers.mobilizon.mobilizon_types import EventType
 
 
 # EventType = MobilizonTypes.EventType
