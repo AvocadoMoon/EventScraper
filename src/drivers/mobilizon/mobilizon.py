@@ -3,21 +3,10 @@ from gql.transport.requests import RequestsHTTPTransport
 from gql.transport.exceptions import TransportQueryError
 from requests.exceptions import HTTPError
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
-from drivers.mobilizon.gql_requests import EventGQL, AuthenticationGQL
-from drivers.mobilizon.mobilizon_types import EventType
+from drivers.mobilizon.gql_requests import EventGQL, AuthenticationGQL, ActorsGQL
+from drivers.mobilizon.mobilizon_types import EventType, Actor
 
 
-def _build_client(endpoint, bearer=None):
-    headers = dict()
-    if bearer is not None:
-        headers['Authorization'] = 'Bearer ' + bearer
-    transport = RequestsHTTPTransport(
-        url=endpoint,
-        headers=headers,
-        verify=True,
-        # retries=3,
-    )
-    return Client(transport=transport, fetch_schema_from_transport=True)
 
 
 class retry_if_not_exception_type(retry_if_exception):
@@ -32,18 +21,91 @@ class retry_if_not_exception_type(retry_if_exception):
 class BadRequest(Exception):
     pass
 
+# Single under score signifies hidden in python
 
-class Mobilizon:
-    loginTokens: [] = None
-    client = None
+class _MobilizonClient:
+    class LoginTokens:
+        accessToken: str
+        refreshToken: str
 
+        def __init__(self, access_token: str, refresh_token: str):
+            self.accessToken = access_token
+            self.refreshToken = refresh_token
+
+    loginTokens: LoginTokens = None
+    client: Client = None
+    
     def __init__(self, endpoint: str, email: str, password: str):
-        self.loginTokens = self._login(endpoint, email, password)
+        self.client = self._build_client(endpoint)
+        data = self.publish(AuthenticationGQL.loginGQL(email, password))
+        login = data['login']
+        self.loginTokens = self.LoginTokens(login['accessToken'], login['refreshToken'])
+        self.client = self._build_client(endpoint, self.loginTokens.accessToken)
+    
+    def _build_client(self, endpoint, bearer=None):
+        headers = dict()
+        if bearer is not None:
+            headers['Authorization'] = 'Bearer ' + bearer
+        transport = RequestsHTTPTransport(
+            url=endpoint,
+            headers=headers,
+            verify=True,
+            # retries=3,
+        )
+        return Client(transport=transport, fetch_schema_from_transport=True)
+        
+    
+    def refresh_token(self, refresh_token: str):
+        return self.publish(AuthenticationGQL.refreshTokenGQL(refresh_token))
+    
+    def logOut(self):
+        return self.publish(AuthenticationGQL.logoutGQL(f'"{self.loginTokens.refreshToken}"'))  # void
 
+    
+    # attempts at 0s, 2s, 4s, 8s
+    @retry(reraise=True, retry=retry_if_not_exception_type(BadRequest), stop=stop_after_attempt(4),
+           wait=wait_exponential(multiplier=2))
+    def publish(self, query):
+        try:
+            response = self.client.execute(query)
+        except HTTPError as e:
+            if e.response.status_code in [400, 404]:
+                raise BadRequest(e)
+            else:
+                raise
+        except TransportQueryError as e:
+            raise BadRequest(e)
+        except:
+            raise
+        return response
+
+
+
+class MobilizonAPI:
+    _mobilizon_client: _MobilizonClient
+    bot_actor: Actor
+    
+    def __init__(self, endpoint: str, email: str, password: str):
+        self._mobilizon_client = _MobilizonClient(endpoint, email, password)
+        self.bot_actor = Actor(**self.getActors()["identities"][0])
+        print(self._mobilizon_client.publish(ActorsGQL.getGroups(f'"{self.bot_actor.name}"')))
     # events
+        
+    
+    def bot_created_event(self, title: str, description: str):
+        event_type = EventType(attributedToId=14, organizerActorId=self.bot_actor.id,
+            title=f'"{title}"', description=f'"{description}"')
 
-    def create_event(self, eventInfo: EventType):
-        return self._publish(EventGQL.createEventGQL(eventInfo))
+        self._create_event(event_type)
+
+    def _create_event(self, eventInfo: EventType):
+        return self._mobilizon_client.publish(EventGQL.createEventGQL(eventInfo))
+    
+    def logout(self):
+        self._mobilizon_client.logOut()
+    
+    def getActors(self):
+        return self._mobilizon_client.publish(ActorsGQL.getIdentities())
 
     # def update_event(self, actor_id, variables):
     # 	variables["organizerActorId"] = actor_id
@@ -100,12 +162,6 @@ class Mobilizon:
 
     # users / credentials
 
-    def logout(self):
-        return self._publish(AuthenticationGQL.logoutGQL(f'"{self.loginTokens[1]}"'))  # void
-
-    def refresh_token(self, refreshToken: str):
-        return self._publish(AuthenticationGQL.refreshTokenGQL(refreshToken))
-
     # def user_identities(self):
     # 	variables = dict()
     # 	data = self._publish(PROFILES_GQL, variables)
@@ -118,26 +174,4 @@ class Mobilizon:
     # 	memberships = data['loggedUser']['memberships']['elements']
     # 	return memberships
 
-    def _login(self, endpoint, email: str, password: str):
-        self.client = _build_client(endpoint)
-        data = self._publish(AuthenticationGQL.loginGQL(email, password))
-        login = data['login']
-        self.client = _build_client(endpoint, login['accessToken'])
-        return login['accessToken'], login['refreshToken']
-
-    # attempts at 0s, 2s, 4s, 8s
-    @retry(reraise=True, retry=retry_if_not_exception_type(BadRequest), stop=stop_after_attempt(4),
-           wait=wait_exponential(multiplier=2))
-    def _publish(self, query):
-        try:
-            response = self.client.execute(query)
-        except HTTPError as e:
-            if e.response.status_code in [400, 404]:
-                raise BadRequest(e)
-            else:
-                raise
-        except TransportQueryError as e:
-            raise BadRequest(e)
-        except:
-            raise
-        return response
+    

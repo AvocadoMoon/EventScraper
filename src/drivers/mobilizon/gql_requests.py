@@ -6,31 +6,38 @@ from drivers.mobilizon.mobilizon_types import EventType
 # https://github.com/framasoft/mobilizon/blob/main/docs/dev.md
 
 
+def _conditional_attribute(key: str, value: str):
+  return ((key + ": " + value + ",") if value is not None else "")
+
 # ==== GQL : Events ====
 class EventGQL:
     def createEventGQL(eventInformation: EventType):
         gqlString = f"""
         mutation {{ createEvent(
-          organizerActorId: {eventInformation.organizerActorId}, 
+          organizerActorId: {eventInformation.organizerActorId},
           attributedToId: {eventInformation.attributedToId}, 
           title: {eventInformation.title}, 
           description: {eventInformation.description}, 
-          beginsOn: {eventInformation.beginsOn}, 
-          endsOn: {eventInformation.endsOn}, 
+          beginsOn: "2020-10-29T00:00:00+01:00"
+          endsOn: "2022-03-31T23:59:59+02:00"
           status: {eventInformation.status}, 
           visibility: {eventInformation.visibility}, 
           joinOptions: {eventInformation.joinOptions}, 
           draft: {eventInformation.draft}, 
-          tags: {eventInformation.tags},
-          picture: {eventInformation.picture}, 
-          onlineAddress: {eventInformation.onlineAddress}, 
-          phoneAddress: {eventInformation.phoneAddress}, 
-          category: {eventInformation.category}, 
-          physicalAddress: {eventInformation.physicalAddress}, 
-          options: {eventInformation.options}, 
-          contacts: {eventInformation.contacts}
+          {_conditional_attribute("picture", eventInformation.picture)}
+          {_conditional_attribute("onlineAddress", eventInformation.onlineAddress)}
+          {_conditional_attribute("phoneAddress", eventInformation.phoneAddress)}
+          {_conditional_attribute("category", eventInformation.category)}
+          physicalAddress: {{
+              geom: {eventInformation.physicalAddress.geom},
+              locality: {eventInformation.physicalAddress.locality},
+              postalCode: {eventInformation.physicalAddress.postalCode},
+              street: {eventInformation.physicalAddress.street},
+              country: {eventInformation.physicalAddress.country}
+            }},
+          {_conditional_attribute("contacts", eventInformation.contacts)}
           )
-          }}
+          {{
             id
             uuid
           }}
@@ -38,6 +45,7 @@ class EventGQL:
     """
         return gql(gqlString)
 
+#           {("picture: " + eventInformation.picture) + "," if eventInformation.picture != None else ""} 
 
 # ==== GQL : credentials ====
 
@@ -73,6 +81,50 @@ class AuthenticationGQL:
       }}
     }}"""
         return gql(gqlString)
+    
+
+class ActorsGQL:
+  def getIdentities():
+    gqlString = """
+    query {
+        identities{
+          id
+          type
+          preferredUsername
+          name
+          url
+        }
+      }
+    """
+    return gql(gqlString)
+  
+  def getGroups(membershipName, page=1, limit=20):
+    gqlString = f"""
+    query {{
+      loggedUser{{
+        id
+        memberships(name: {membershipName}, page: {page}, limit: {limit}){{
+          total
+          elements{{
+            role
+            actor{{
+              id
+              type
+              preferredUsername
+              name
+            }}
+            parent{{
+              id
+              type
+              preferredUsername
+              name
+            }}
+          }}
+        }}
+      }}
+    }}
+    """
+    return gql(gqlString)
 
 
 # UPDATE_GQL = gql("""

@@ -1,43 +1,53 @@
 from pydantic import BaseModel
-from enum import Enum
-
 
 class EventParameters:
-    class EventStatus(Enum):
+    class EventStatus:
         confirmed = "CONFIRMED"
         canceled = "CANCELED"
         tentative = "TENTATIVE"
 
-    class EventCategory(Enum):
+    class EventCategory:
         category = "CATEGORY"
 
-    class EventVisibility(Enum):
+    class EventVisibility:
         public = "PUBLIC"
+    
+    class JoinOptions:
+        free = "FREE"
+        invite = "INVITE"
+        restricted = "RESTRICTED"
 
     class EventAddress(BaseModel):
-        geom: str
-        locality: str  # Town
-        postalCode: str
-        street: str
-        country: str
+        geom: str = 'null'
+        locality: str  = 'null'  # Town
+        postalCode: str = 'null'
+        street: str = 'null'
+        country: str = 'null'
 
 
 class EventType(BaseModel):
     organizerActorId: int
     attributedToId: int
     title: str
-    description: str
-    beginsOn: str
-    endsOn: str
-    status: EventParameters.EventStatus
-    visibility: str
-    joinOptions: str
-    draft: bool
-    tags: list[str]
-    picture: str  # https://github.com/framasoft/mobilizon/blob/main/lib/graphql/schema/media.ex
-    onlineAddress: str
-    phoneAddress: str
-    category: str
-    physicalAddress: EventParameters.EventAddress
-    options: dict
-    contacts: str
+    description: str = 'null'
+    beginsOn: str = None
+    endsOn: str = None
+    status: str = EventParameters.EventStatus.confirmed
+    visibility: str = EventParameters.EventVisibility.public
+    joinOptions: str = EventParameters.JoinOptions.free
+    draft: str = "false"
+    tags: list[str] = []
+    picture: str = None # https://github.com/framasoft/mobilizon/blob/main/lib/graphql/schema/media.ex
+    onlineAddress: str = None
+    phoneAddress: str = None
+    category: str = None
+    physicalAddress: EventParameters.EventAddress = EventParameters.EventAddress()
+    # options: dict = {}
+    contacts: str = None
+
+class Actor(BaseModel):
+    id: int
+    name: str
+    preferredUsername: str
+    type: str
+    url: str
