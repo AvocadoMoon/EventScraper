@@ -1,41 +1,39 @@
 from gql import gql
-from drivers.mobilizon.mobilizon_types import EventType
+from drivers.mobilizon.mobilizon_types import EventType, EventParameters
+from pydantic import BaseModel
+
 
 
 # EventType = MobilizonTypes.EventType
 # https://github.com/framasoft/mobilizon/blob/main/docs/dev.md
 
 
-def _conditional_attribute(key: str, value: str):
-  return ((key + ": " + value + ",") if value is not None else "")
+def _conditional_attribute(key: str, value):
+  return ((key + ": " + str(value) + ",\n") if value is not None else "")
+
+def conditional_gql_inputs(classDataObject: BaseModel or dict):
+  classDict: dict = classDataObject.dict() if isinstance(classDataObject, (BaseModel)) else classDataObject
+  gqlString = """"""
+  for key, value in classDict.items():
+    print(f"{key}, {value}")
+    if (isinstance(value, (str, int))):
+      gqlString += _conditional_attribute(key, value)
+    elif (isinstance(value, (dict)) and value is not None):
+      gqlString = f"""{gqlString}{key}:{{
+          {conditional_gql_inputs(value)}
+        }},"""
+  print(gqlString)
+  return gqlString
+
+# conditional_gql_inputs(EventType(title="f", description="f", actorID=1, picture=EventParameters.MediaInput(name="fd", url="bar")))
+
 
 # ==== GQL : Events ====
 class EventGQL:
     def createEventGQL(eventInformation: EventType):
         gqlString = f"""
         mutation {{ createEvent(
-          organizerActorId: {eventInformation.organizerActorId},
-          attributedToId: {eventInformation.attributedToId}, 
-          title: {eventInformation.title}, 
-          description: {eventInformation.description}, 
-          beginsOn: "2020-10-29T00:00:00+01:00"
-          endsOn: "2022-03-31T23:59:59+02:00"
-          status: {eventInformation.status}, 
-          visibility: {eventInformation.visibility}, 
-          joinOptions: {eventInformation.joinOptions}, 
-          draft: {eventInformation.draft}, 
-          {_conditional_attribute("picture", eventInformation.picture)}
-          {_conditional_attribute("onlineAddress", eventInformation.onlineAddress)}
-          {_conditional_attribute("phoneAddress", eventInformation.phoneAddress)}
-          {_conditional_attribute("category", eventInformation.category)}
-          physicalAddress: {{
-              geom: {eventInformation.physicalAddress.geom},
-              locality: {eventInformation.physicalAddress.locality},
-              postalCode: {eventInformation.physicalAddress.postalCode},
-              street: {eventInformation.physicalAddress.street},
-              country: {eventInformation.physicalAddress.country}
-            }},
-          {_conditional_attribute("contacts", eventInformation.contacts)}
+          {conditional_gql_inputs(eventInformation)}
           )
           {{
             id
@@ -44,6 +42,20 @@ class EventGQL:
         }}
     """
         return gql(gqlString)
+    
+    def uploadMediaRawGQL():
+      gqlString = """
+        mutation($file: Upload!, $name: String!, $actorId: ID){
+          uploadMedia(
+            file: $file,
+            name: $name,
+            actorId: $actorId
+          ){
+            id
+          }
+        }
+      """
+      return gqlString
 
 #           {("picture: " + eventInformation.picture) + "," if eventInformation.picture != None else ""} 
 
@@ -228,3 +240,36 @@ class ActorsGQL:
 # }
 # fragment ActorFragment on Actor {  id type  preferredUsername  name }
 # """)
+
+
+"""
+        mutation {{ createEvent(
+          organizerActorId: {eventInformation.organizerActorId},
+          attributedToId: {eventInformation.attributedToId}, 
+          title: {eventInformation.title}, 
+          description: {eventInformation.description}, 
+          beginsOn: "2020-10-29T00:00:00+01:00"
+          endsOn: "2022-03-31T23:59:59+02:00"
+          status: {eventInformation.status}, 
+          visibility: {eventInformation.visibility}, 
+          joinOptions: {eventInformation.joinOptions}, 
+          draft: {eventInformation.draft}, 
+          {_conditional_attribute("picture", eventInformation.picture)}
+          {_conditional_attribute("onlineAddress", eventInformation.onlineAddress)}
+          {_conditional_attribute("phoneAddress", eventInformation.phoneAddress)}
+          {_conditional_attribute("category", eventInformation.category)}
+          physicalAddress: {{
+              geom: {eventInformation.physicalAddress.geom},
+              locality: {eventInformation.physicalAddress.locality},
+              postalCode: {eventInformation.physicalAddress.postalCode},
+              street: {eventInformation.physicalAddress.street},
+              country: {eventInformation.physicalAddress.country}
+            }},
+          {_conditional_attribute("contacts", eventInformation.contacts)}
+          )
+          {{
+            id
+            uuid
+          }}
+        }}
+    """

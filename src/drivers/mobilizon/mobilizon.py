@@ -4,8 +4,9 @@ from gql.transport.exceptions import TransportQueryError
 from requests.exceptions import HTTPError
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 from drivers.mobilizon.gql_requests import EventGQL, AuthenticationGQL, ActorsGQL
-from drivers.mobilizon.mobilizon_types import EventType, Actor
-
+from drivers.mobilizon.mobilizon_types import EventType, Actor, EventParameters
+import requests
+import json
 
 
 
@@ -34,20 +35,22 @@ class _MobilizonClient:
 
     loginTokens: LoginTokens = None
     client: Client = None
+    endpoint: str = None
     
     def __init__(self, endpoint: str, email: str, password: str):
-        self.client = self._build_client(endpoint)
+        self.endpoint = endpoint
+        self.client = self._build_client()
         data = self.publish(AuthenticationGQL.loginGQL(email, password))
         login = data['login']
         self.loginTokens = self.LoginTokens(login['accessToken'], login['refreshToken'])
-        self.client = self._build_client(endpoint, self.loginTokens.accessToken)
+        self.client = self._build_client(self.loginTokens.accessToken)
     
-    def _build_client(self, endpoint, bearer=None):
+    def _build_client(self,bearer=None):
         headers = dict()
         if bearer is not None:
             headers['Authorization'] = 'Bearer ' + bearer
         transport = RequestsHTTPTransport(
-            url=endpoint,
+            url=self.endpoint,
             headers=headers,
             verify=True,
             # retries=3,
@@ -65,9 +68,9 @@ class _MobilizonClient:
     # attempts at 0s, 2s, 4s, 8s
     @retry(reraise=True, retry=retry_if_not_exception_type(BadRequest), stop=stop_after_attempt(4),
            wait=wait_exponential(multiplier=2))
-    def publish(self, query):
+    def publish(self, query, file:bool = False, params: dict = None):
         try:
-            response = self.client.execute(query)
+            response = self.client.execute(query) if not file else self.client.execute(query, variable_values=params, upload_files=True)
         except HTTPError as e:
             if e.response.status_code in [400, 404]:
                 raise BadRequest(e)
@@ -88,19 +91,32 @@ class MobilizonAPI:
     def __init__(self, endpoint: str, email: str, password: str):
         self._mobilizon_client = _MobilizonClient(endpoint, email, password)
         self.bot_actor = Actor(**self.getActors()["identities"][0])
-        print(self._mobilizon_client.publish(ActorsGQL.getGroups(f'"{self.bot_actor.name}"')))
     # events
         
     
-    def bot_created_event(self, title: str, description: str):
+    def bot_created_event(self, title: str, description: str, pictureURL: str=None, onlineAddress:str = None):
         event_type = EventType(attributedToId=14, organizerActorId=self.bot_actor.id,
-            title=f'"{title}"', description=f'"{description}"')
+            title=f'"{title}"', description=f'"{description}"', 
+            picture=EventParameters.MediaInput(media=EventParameters.MediaInput.Media(name='"Duck"', url=pictureURL, actorId=self.bot_actor.id)), 
+            onlineAddress=onlineAddress)
 
-        self._create_event(event_type)
-
-    def _create_event(self, eventInfo: EventType):
-        return self._mobilizon_client.publish(EventGQL.createEventGQL(eventInfo))
+        self._mobilizon_client.publish(EventGQL.createEventGQL(event_type))
     
+    def upload_file(self, name: str, file):
+        variables = {"name": "Duck.jpg", "file": "theFiles", "actorID": self.bot_actor.id}
+        variables = json.dumps(variables)
+        response = requests.post(self._mobilizon_client.endpoint, 
+            files=(
+                # Name Filename data content_type headers
+                ('query', (None, EventGQL.uploadMediaRawGQL())),
+                ('variables', (None, variables)),
+                ('theFiles', ("Duck.jpg", file, 'application/octet-stream'))
+                ),
+                headers={'Authorization': f'Bearer {self._mobilizon_client.loginTokens.accessToken}',
+                         'accept': 'application/json'}
+            )
+        return response
+
     def logout(self):
         self._mobilizon_client.logOut()
     
