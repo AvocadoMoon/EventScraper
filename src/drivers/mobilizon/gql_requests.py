@@ -21,7 +21,7 @@ def conditional_gql_inputs(classDataObject: BaseModel or dict):
     if (valueType is str or valueType is int):
       value = f'"{value}"' if isinstance(value, (str)) else value
       gqlString += _conditional_attribute(key, value)
-    elif (valueType is Enum):
+    elif (isinstance(value, Enum)):
       value = value.value
       gqlString += _conditional_attribute(key, value)
     elif (valueType is dict and value is not None):

@@ -17,6 +17,36 @@ class EventParameters:
         free = "FREE"
         invite = "INVITE"
         restricted = "RESTRICTED"
+    
+    class Categories(Enum):
+        arts = "ARTS".upper()
+        book_clubs = "BOOK_CLUBS".upper()
+        business = "BUSINESS"
+        causes = "CAUSES"
+        comedy = "COMEDY"
+        crafts = "CRAFTS"
+        food_drink = "FOOD_DRINK"
+        health = "HEALTH"
+        music = "MUSIC"
+        community = "COMMUNITY"
+        family_education = "FAMILY_EDUCATION"
+        fashion_beauty = "FASHION_BEAUTY"
+        film_media = "FILM_MEDIA"
+        games = "GAMES"
+        language_culture = "LANGUAGE_CULTURE"
+        learning = "LEARNING"
+        lgbtq = "LGBTQ"
+        movements_politics = "MOVEMENTS_POLITICS"
+        networking = "NETWORKING"
+        party = "PARTY"
+        performing_visual_arts = "PERFORMING_VISUAL_ARTS"
+        pets = "PETS"
+        photography = "PHOTOGRAPHY"
+        outdoors_adventure = "OUTDOORS_ADVENTURE"
+        spirituality_religion_beliefs = "SPIRITUALITY_RELIGION_BELIEFS"
+        science_tech = "SCIENCE_TECH"
+        sports = "SPORTS"
+        theatre = "THEATRE"
 
     class Address(BaseModel):
         """Address object that Mobilizon can utilize
@@ -56,7 +86,7 @@ class EventType(BaseModel):
     picture: EventParameters.MediaInput = None # https://github.com/framasoft/mobilizon/blob/main/lib/graphql/schema/media.ex
     onlineAddress: str = None
     phoneAddress: str = None
-    category: str = None
+    category: EventParameters.Categories = None
     physicalAddress: EventParameters.Address = None
     # options: dict = {}
     contacts: str = None
