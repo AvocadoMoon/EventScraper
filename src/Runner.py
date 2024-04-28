@@ -1,5 +1,5 @@
 from drivers.mobilizon.mobilizon import MobilizonAPI
-from drivers.mobilizon.mobilizon_types import EventType, EventParameters
+from drivers.mobilizon.mobilizon_types import EventParameters
 import datetime
 from datetime import timezone
 import json
