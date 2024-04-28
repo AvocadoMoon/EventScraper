@@ -89,16 +89,18 @@ class MobilizonAPI:
     bot_actor: Actor
     
     def __init__(self, endpoint: str, email: str, password: str):
-        self._mobilizon_client = _MobilizonClient(endpoint, email, password)
+        self._mobilizon_client = _MobilizonClient(endpoint, f'"{email}"', f'"{password}"')
         self.bot_actor = Actor(**self.getActors()["identities"][0])
     # events
         
     
-    def bot_created_event(self, title: str, description: str, pictureURL: str=None, onlineAddress:str = None):
+    def bot_created_event(self, title: str, description: str, 
+                          onlineAddress:str = None, beginsOn:str = None, endsOn:str = None,
+                          physicalAddress: EventParameters.Address = None):
         event_type = EventType(attributedToId=14, organizerActorId=self.bot_actor.id,
-            title=f'"{title}"', description=f'"{description}"', 
-            picture=EventParameters.MediaInput(media=EventParameters.MediaInput.Media(name='"Duck"', url=pictureURL, actorId=self.bot_actor.id)), 
-            onlineAddress=onlineAddress)
+            title=title, description=description, 
+            onlineAddress=onlineAddress, beginsOn=beginsOn, endsOn=endsOn,
+            physicalAddress=physicalAddress)
 
         self._mobilizon_client.publish(EventGQL.createEventGQL(event_type))
     

@@ -1,28 +1,38 @@
 from pydantic import BaseModel
+from enum import Enum
 
 class EventParameters:
-    class Status:
+    class Status(Enum):
         confirmed = "CONFIRMED"
         canceled = "CANCELED"
         tentative = "TENTATIVE"
 
-    class Category:
+    class Category(Enum):
         category = "CATEGORY"
 
-    class Visibility:
+    class Visibility(Enum):
         public = "PUBLIC"
     
-    class JoinOptions:
+    class JoinOptions(Enum):
         free = "FREE"
         invite = "INVITE"
         restricted = "RESTRICTED"
 
     class Address(BaseModel):
-        geom: str = None
-        locality: str  = None  # Town
-        postalCode: str = None
-        street: str = None
-        country: str = None
+        """Address object that Mobilizon can utilize
+
+        Args:
+            geom: State
+            locality: Town
+            postalCode: ZipCode
+            street: Street
+            country: Country
+        """
+        geom: str = None # State
+        locality: str  # Town
+        postalCode: str # ZipCode
+        street: str # Street
+        country: str # 
     
     class MediaInput(BaseModel):
         media_id: int = None
@@ -37,11 +47,11 @@ class EventType(BaseModel):
     title: str = ""
     description: str = None
     beginsOn: str = '"2020-10-29T00:00:00+01:00"'
-    endsOn: str = '"2022-03-31T23:59:59+02:00"'
-    status: str = EventParameters.Status.confirmed
-    visibility: str = EventParameters.Visibility.public
-    joinOptions: str = EventParameters.JoinOptions.free
-    draft: str = "false"
+    endsOn: str = None
+    status: EventParameters.Status = EventParameters.Status.confirmed
+    visibility: EventParameters.Visibility = EventParameters.Visibility.public
+    joinOptions: EventParameters.JoinOptions = EventParameters.JoinOptions.free
+    draft: str = None
     tags: list[str] = []
     picture: EventParameters.MediaInput = None # https://github.com/framasoft/mobilizon/blob/main/lib/graphql/schema/media.ex
     onlineAddress: str = None

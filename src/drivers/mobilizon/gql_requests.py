@@ -1,6 +1,7 @@
 from gql import gql
 from drivers.mobilizon.mobilizon_types import EventType, EventParameters
 from pydantic import BaseModel
+from enum import Enum
 
 
 
@@ -11,18 +12,22 @@ from pydantic import BaseModel
 def _conditional_attribute(key: str, value):
   return ((key + ": " + str(value) + ",\n") if value is not None else "")
 
+
 def conditional_gql_inputs(classDataObject: BaseModel or dict):
   classDict: dict = classDataObject.dict() if isinstance(classDataObject, (BaseModel)) else classDataObject
   gqlString = """"""
   for key, value in classDict.items():
-    print(f"{key}, {value}")
-    if (isinstance(value, (str, int))):
+    valueType = type(value)
+    if (valueType is str or valueType is int):
+      value = f'"{value}"' if isinstance(value, (str)) else value
       gqlString += _conditional_attribute(key, value)
-    elif (isinstance(value, (dict)) and value is not None):
+    elif (valueType is Enum):
+      value = value.value
+      gqlString += _conditional_attribute(key, value)
+    elif (valueType is dict and value is not None):
       gqlString = f"""{gqlString}{key}:{{
           {conditional_gql_inputs(value)}
         }},"""
-  print(gqlString)
   return gqlString
 
 # conditional_gql_inputs(EventType(title="f", description="f", actorID=1, picture=EventParameters.MediaInput(name="fd", url="bar")))
