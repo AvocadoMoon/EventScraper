@@ -1,9 +1,9 @@
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
+from googleapiclient.discovery import build, Resource
 from googleapiclient.errors import HttpError
-import datetime
+from datetime import datetime, timedelta
 import os
 
 # Subscribe to the calendars
@@ -18,7 +18,12 @@ import os
 # Google API Documentation
 # https://console.cloud.google.com/apis/credentials/consent
 # https://developers.google.com/calendar/api/quickstart/python
-def main():
+# https://developers.google.com/resources/api-libraries/documentation/calendar/v3/python/latest/calendar_v3.events.html#list
+
+publicCalenderIDs = ["bsbc.co_c4dt5esnmutedv7p3nu01aerhk@group.calendar.google.com",
+                     "ctenvironment@gmail.com"]
+
+def getCalenderReadClient():
     SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
     credentialTokens = None
     credential_token_path = f"{os.getcwd()}/src/token.json"
@@ -38,18 +43,29 @@ def main():
         with open(credential_token_path, "w") as tokenFile:
             tokenFile.write(credentialTokens.to_json())
         
-    try:
-        service = build("calendar", "v3", credentials=credentialTokens)
+    
+    return build("calendar", "v3", credentials=credentialTokens)
 
-        # Call the Calendar API
-        now = datetime.datetime.utcnow().isoformat() + "Z"  # 'Z' indicates UTC time
-        print("Getting the upcoming 10 events")
+def getAllEventsAWeekFromNow(service: Resource, calendarId: str, dateOfLastEventScraped: str = None):
+    """Get events all events for that specific calender a week from today.
+
+    Args:
+        service (Resource): Calender resource available from creating a client with 'read calender' scope
+        calendarId (str): UUID of calender. Same ID used to subscribe to a calender
+        dateOfLastEventScraped (str, optional): UTC date with timedelta following isoformat. Have to add 'Z' to isoformat to indicate its UTC time. Defaults to None.
+    """
+    try:
+        # Call the Calendar API, 'Z' indicates UTC time
+        dateOfLastEventScraped = datetime.utcnow().isoformat() + "Z" if dateOfLastEventScraped is None else dateOfLastEventScraped
+        weekFromNow = datetime.utcnow() + timedelta(days=7)
+        weekFromNow = weekFromNow.isoformat() + "Z"
+        
         events_result = (
             service.events()
             .list(
-                calendarId="bsbc.co_c4dt5esnmutedv7p3nu01aerhk@group.calendar.google.com",
-                timeMin=now,
-                maxResults=10,
+                calendarId=calendarId,
+                timeMin=dateOfLastEventScraped,
+                timeMax=weekFromNow,
                 singleEvents=True,
                 orderBy="startTime",
             )
@@ -63,10 +79,18 @@ def main():
 
         # Prints the start and name of the next 10 events
         for event in events:
-            start = event["start"].get("dateTime", event["start"].get("date"))
-            print(start, event["summary"])
-
+            titleOfEvent = event["summary"]
+            location = event.get("location")
+            description = event.get("description")
+            start = event["start"].get("dateTime")
+            end = event["end"].get("dateTime")
+            print(f"Start: {start}, End: {end}, Title: {titleOfEvent}\nDescription: {description}, Location: {location}")
     except HttpError as error:
         print(f"An error occurred: {error}")
 
-main()
+service = getCalenderReadClient()
+
+exampleTimeOffset = datetime.utcnow() + timedelta(days=3)
+exampleTimeOffset = exampleTimeOffset.isoformat() + "Z"
+for k in publicCalenderIDs:
+    getAllEventsAWeekFromNow(service, k)
