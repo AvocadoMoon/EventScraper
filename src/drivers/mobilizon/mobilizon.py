@@ -94,15 +94,8 @@ class MobilizonAPI:
     # events
         
     
-    def bot_created_event(self, title: str, description: str, 
-                          onlineAddress:str = None, beginsOn:str = None, endsOn:str = None,
-                          physicalAddress: EventParameters.Address = None,
-                          category: EventParameters.Categories = None):
-        event_type = EventType(attributedToId=14, organizerActorId=self.bot_actor.id,
-            title=title, description=description, 
-            onlineAddress=onlineAddress, beginsOn=beginsOn, endsOn=endsOn,
-            physicalAddress=physicalAddress, category=category)
-        
+    def bot_created_event(self, event_type: EventType):
+        event_type.organizerActorId = self.bot_actor.id
         # print(EventGQL.createEventGQL(event_type))
 
         self._mobilizon_client.publish(EventGQL.createEventGQL(event_type))

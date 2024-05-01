@@ -1,6 +1,13 @@
 from pydantic import BaseModel
 from enum import Enum
 
+def _generate_args(localVariables: dict) -> dict:
+    args = {}
+    for name, value in localVariables.items():
+        if (value is not None and name != "self" and name != "__class__"):
+            args[name] = value
+    return args
+
 class EventParameters:
     class Status(Enum):
         confirmed = "CONFIRMED"
@@ -47,6 +54,7 @@ class EventParameters:
         science_tech = "SCIENCE_TECH"
         sports = "SPORTS"
         theatre = "THEATRE"
+        default = "MEETING"
 
     class Address(BaseModel):
         """Address object that Mobilizon can utilize
@@ -63,6 +71,10 @@ class EventParameters:
         postalCode: str # ZipCode
         street: str # Street
         country: str # 
+        
+        def __init__(self, locality:str, postalCode:str, street:str, country:str, geom:str = None):
+            args = _generate_args(locals())
+            super().__init__(**args)
     
     class MediaInput(BaseModel):
         media_id: int = None
@@ -72,11 +84,18 @@ class EventParameters:
 
 
 class EventType(BaseModel):
-    organizerActorId: int = 0
-    attributedToId: int = 0
+    """_summary_
+
+    Args:
+        OrganizerActorId: Actor ID
+        AttributedToId: Group ID
+    """
+    
+    organizerActorId: int = 0 # Actor ID
+    attributedToId: int = 0 # Group ID
     title: str = ""
     description: str = None
-    beginsOn: str = '"2020-10-29T00:00:00+01:00"'
+    beginsOn: str = "2020-10-29T00:00:00+01:00"
     endsOn: str = None
     status: EventParameters.Status = EventParameters.Status.confirmed
     visibility: EventParameters.Visibility = EventParameters.Visibility.public
@@ -90,6 +109,14 @@ class EventType(BaseModel):
     physicalAddress: EventParameters.Address = None
     # options: dict = {}
     contacts: str = None
+    
+    def __init__(self, attributedToId:int, title: str, description: str, 
+                          beginsOn:str, onlineAddress:str = None, endsOn:str = None,
+                          physicalAddress: EventParameters.Address = None,
+                          category: EventParameters.Categories = None, tags:[] = None):
+        args = _generate_args(locals())
+        super().__init__(**args)
+
 
 class Actor(BaseModel):
     id: int
@@ -97,6 +124,10 @@ class Actor(BaseModel):
     preferredUsername: str
     type: str
     url: str
+    
+    def __init__(self, id: int, name: str, preferredUsername: str, type: str, url:str):
+        args = _generate_args(locals())
+        super().__init__(**args)
     
 # print(isinstance(EventParameters.MediaInput(), (BaseModel)))
 
