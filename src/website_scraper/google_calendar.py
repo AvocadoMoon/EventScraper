@@ -8,6 +8,7 @@ import os
 
 # Subscribe to the calendars
 # https://webapps.stackexchange.com/questions/5217/how-can-i-find-the-subscribe-url-from-the-google-calendar-embed-source-code
+# http://www.google.com/calendar/feeds/HERE/public/basic
 
 # Bike Shop Source 
 # bsbc.co_c4dt5esnmutedv7p3nu01aerhk@group.calendar.google.com
