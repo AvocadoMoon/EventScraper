@@ -1,5 +1,5 @@
 from gql import gql
-from drivers.mobilizon.mobilizon_types import EventType, EventParameters
+from src.drivers.mobilizon.mobilizon_types import EventType, EventParameters
 from pydantic import BaseModel
 from enum import Enum
 

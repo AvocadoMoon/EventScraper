@@ -4,7 +4,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build, Resource
 from googleapiclient.errors import HttpError
 from datetime import datetime, timedelta
-from drivers.mobilizon.mobilizon_types import EventType, EventParameters
+from src.drivers.mobilizon.mobilizon_types import EventType, EventParameters
 import os
 
 # Subscribe to the calendars

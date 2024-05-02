@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "cteventscraper"
+name = "src"
 version = "0.1.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
-package-mode = false
+package-mode = true
 
 [tool.poetry.dependencies]
 python = "^3.10"
