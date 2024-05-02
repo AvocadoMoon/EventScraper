@@ -25,30 +25,43 @@ class UploadedEventRow:
         self.date = date
         self.groupID = groupID
 
-
-def connectAndInitializeDB() -> sqlite3.Connection:
-    sql_db_connection = sqlite3.connect("event_cache.db")
-    db_cursor = sql_db_connection.cursor()
-
-    db_cursor.execute("CREATE TABLE uploaded_events(uuid, id, title text, date text, group_id)")
-    return sql_db_connection
-
-
-def insertUploadedEvent(sql_db_connection: sqlite3.Connection, rowsToAdd: [UploadedEventRow]):
-    db_cursor: sqlite3.Cursor = sql_db_connection.cursor()
-    insertArray = []
-    for row in rowsToAdd:
-        insertArray.append((row.uuid, row.id, row.title, row.date, row.groupID))
+class SQLiteDB:
+    sql_db_connection: sqlite3.Connection
+    uploaded_events_table_name = "uploaded_events"
     
-    db_cursor.executemany("INSERT INTO uploaded_events VALUES (?, ?, ?, ? , ?)", insertArray)
-    sql_db_connection.commit()
+    def connectAndInitializeDB(self) -> sqlite3.Connection:
+        sql_db_connection = sqlite3.connect("event_cache.db")
+        db_cursor = sql_db_connection.cursor()
+
+        db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {self.uploaded_events_table_name} 
+                          (uuid PRIMARY KEY, id, title text, date text, group_id)""")
+        self.sql_db_connection = sql_db_connection
+
+    def close(self):
+        self.sql_db_connection.close()
+
+    def insertUploadedEvent(self, rowsToAdd: [UploadedEventRow]):
+        db_cursor: sqlite3.Cursor = self.sql_db_connection.cursor()
+        insertArray = []
+        for row in rowsToAdd:
+            insertArray.append((row.uuid, row.id, row.title, row.date, row.groupID))
+        
+        db_cursor.executemany(f"INSERT INTO {self.uploaded_events_table_name} VALUES (?, ?, ?, ? , ?)", insertArray)
+        self.sql_db_connection.commit()
 
 
-# https://www.sqlite.org/lang_datefunc.html
-# Uses built in date time function
-def deleteAllMonthOldEvents(sql_db_connection: sqlite3.Connection):
-    db_cursor = sql_db_connection.cursor()
-    db_cursor.execute("DELETE FROM uploaded_events WHERE datetime(date) < datetime('now', '-1 month')")
+    # https://www.sqlite.org/lang_datefunc.html
+    # Uses built in date time function
+    def deleteAllMonthOldEvents(self):
+        db_cursor = self.sql_db_connection.cursor()
+        db_cursor.execute(f"DELETE FROM {self.uploaded_events_table_name} WHERE datetime(date) < datetime('now', '-1 month')")
+        
+        self.sql_db_connection.commit()
     
-    sql_db_connection.commit()
+    def selectAllFromTable(self) -> sqlite3.Cursor:
+        db_cursor = self.sql_db_connection.cursor()
+        res = db_cursor.execute(f"SELECT * FROM {self.uploaded_events_table_name}")
+        return res
+        
+        
     
