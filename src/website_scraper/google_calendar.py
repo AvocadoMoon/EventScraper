@@ -4,6 +4,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build, Resource
 from googleapiclient.errors import HttpError
 from datetime import datetime, timedelta
+from drivers.mobilizon.mobilizon_types import EventType, EventParameters
 import os
 
 # Subscribe to the calendars
@@ -21,8 +22,6 @@ import os
 # https://developers.google.com/calendar/api/quickstart/python
 # https://developers.google.com/resources/api-libraries/documentation/calendar/v3/python/latest/calendar_v3.events.html#list
 
-publicCalenderIDs = ["bsbc.co_c4dt5esnmutedv7p3nu01aerhk@group.calendar.google.com",
-                     "ctenvironment@gmail.com"]
 
 def getCalenderReadClient():
     SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
@@ -72,26 +71,42 @@ def getAllEventsAWeekFromNow(service: Resource, calendarId: str, dateOfLastEvent
             )
             .execute()
         )
-        events = events_result.get("items", [])
-
-        if not events:
+        googleEvents = events_result.get("items", [])
+        if not googleEvents:
             print("No upcoming events found.")
             return
 
-        # Prints the start and name of the next 10 events
-        for event in events:
-            titleOfEvent = event["summary"]
-            location = event.get("location")
-            description = event.get("description")
-            start = event["start"].get("dateTime")
-            end = event["end"].get("dateTime")
-            print(f"Start: {start}, End: {end}, Title: {titleOfEvent}\nDescription: {description}, Location: {location}")
+        events = []
+        for googleEvent in googleEvents:
+            eventAddress = _parse_google_location(googleEvent.get("location"))
+            event = EventType(attributedToId=0, 
+                              title= googleEvent["summary"], description=googleEvent.get("description"),
+                              beginsOn=googleEvent["start"].get("dateTime"),
+                              endsOn=googleEvent["end"].get("dateTime"),
+                              onlineAddress="", physicalAddress=eventAddress,
+                              category=None, tags=None)
+            events.append(event)
+            # titleOfEvent = googleEvent["summary"]
+            # location = googleEvent.get("location")
+            # description = googleEvent.get("description")
+            # start = googleEvent["start"].get("dateTime")
+            # end = googleEvent["end"].get("dateTime")
+            print(f"Start: {event.beginsOn}, End: {event.endsOn}, Title: {event.title}\nDescription: {event.description}, Location: {None if event.physicalAddress is None else event.physicalAddress.locality}")
+        
+        return events
     except HttpError as error:
         print(f"An error occurred: {error}")
 
-service = getCalenderReadClient()
+def _parse_google_location(location:str):
+    return None if location is None else None
+    tokens = location.split(",")
+    address: EventParameters.Address = None
+    match len(tokens):
+        case 3:
+            address = EventParameters.Address(locality=tokens[0], postalCode=tokens[1], street="", country=tokens[2])
+        case 4:
+            address = EventParameters.Address(locality=tokens[1], postalCode=tokens[2], street=tokens[0], country=tokens[3])
+        case 5:
+            address = EventParameters.Address(locality=tokens[2], postalCode=tokens[3], street=tokens[1], country=tokens[4])
 
-exampleTimeOffset = datetime.utcnow() + timedelta(days=3)
-exampleTimeOffset = exampleTimeOffset.isoformat() + "Z"
-for k in publicCalenderIDs:
-    getAllEventsAWeekFromNow(service, k)
+    return address
