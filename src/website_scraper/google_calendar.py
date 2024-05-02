@@ -46,7 +46,7 @@ def getCalenderReadClient():
     
     return build("calendar", "v3", credentials=credentialTokens)
 
-def getAllEventsAWeekFromNow(service: Resource, calendarId: str, dateOfLastEventScraped: str = None):
+def getAllEventsAWeekFromNow(service: Resource, calendarId: str, dateOfLastEventScraped: str = None) -> [EventType]:
     """Get events all events for that specific calender a week from today.
 
     Args:
@@ -86,12 +86,6 @@ def getAllEventsAWeekFromNow(service: Resource, calendarId: str, dateOfLastEvent
                               onlineAddress="", physicalAddress=eventAddress,
                               category=None, tags=None)
             events.append(event)
-            # titleOfEvent = googleEvent["summary"]
-            # location = googleEvent.get("location")
-            # description = googleEvent.get("description")
-            # start = googleEvent["start"].get("dateTime")
-            # end = googleEvent["end"].get("dateTime")
-            print(f"Start: {event.beginsOn}, End: {event.endsOn}, Title: {event.title}\nDescription: {event.description}, Location: {None if event.physicalAddress is None else event.physicalAddress.locality}")
         
         return events
     except HttpError as error:
