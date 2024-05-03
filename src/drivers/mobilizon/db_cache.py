@@ -62,6 +62,12 @@ class SQLiteDB:
         db_cursor = self.sql_db_connection.cursor()
         res = db_cursor.execute(f"SELECT * FROM {self.uploaded_events_table_name}")
         return res
+    
+    def selectGroupFromTable(self, groupID):
+        db_cursor = self.sql_db_connection.cursor()
+        # Comma at the end of (groupID,) turns it into a tuple
+        res = db_cursor.execute(f"SELECT * FROM {self.uploaded_events_table_name} WHERE group_id = ?", (groupID,))
+        return res
         
         
     
