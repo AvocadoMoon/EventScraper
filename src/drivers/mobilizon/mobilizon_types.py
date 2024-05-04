@@ -89,6 +89,7 @@ class EventType(BaseModel):
     Args:
         OrganizerActorId: Actor ID
         AttributedToId: Group ID
+        Dates: UTC format, that is YYYY-MM-DD HH:MM:SSZ with T in the middle if wanted
     """
     
     organizerActorId: int = 0 # Actor ID

@@ -1,6 +1,6 @@
 from src.drivers.mobilizon.db_cache import SQLiteDB, UploadedEventRow
 from src.drivers.mobilizon.mobilizon import MobilizonAPI
-from src.drivers.mobilizon.mobilizon_types import EventParameters, EventType
+from src.drivers.mobilizon.mobilizon_types import EventType
 from src.website_scraper.google_calendar import GCalAPI
 import json
 import os
@@ -28,7 +28,8 @@ def getGCalEventsAndUploadThem():
         print(f"Getting events from {key}")
         for google_calendar_id in google_calendars[key]["googleIDs"]:
             lastUploadedEventDate = cache_db.getLastEventForCalendarID(google_calendar_id)
-            events: [EventType] = google_calendar_api.getAllEventsAWeekFromNow(google_calendar_id, lastUploadedEventDate)
+            events: [EventType] = google_calendar_api.getAllEventsAWeekFromNow(
+                google_calendar_id, google_calendars[key]["groupID"], lastUploadedEventDate)
             
             uploadedEvents = []
             for event in events:
@@ -38,7 +39,8 @@ def getGCalEventsAndUploadThem():
                                                        id=uploadResponse["id"],
                                                        title=event.title,
                                                        date=event.beginsOn,
-                                                       groupID=event.attributedToId))
+                                                       groupID=event.attributedToId,
+                                                       groupName=key))
             
             cache_db.insertUploadedEvent(uploadedEvents)
     

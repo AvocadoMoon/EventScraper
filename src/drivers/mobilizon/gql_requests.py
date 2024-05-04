@@ -1,5 +1,5 @@
 from gql import gql
-from src.drivers.mobilizon.mobilizon_types import EventType, EventParameters
+from src.drivers.mobilizon.mobilizon_types import EventType
 from pydantic import BaseModel
 from enum import Enum
 
@@ -115,7 +115,7 @@ class ActorsGQL:
     """
     return gql(gqlString)
   
-  def getGroups(membershipName, page=1, limit=20):
+  def getGroups(membershipName, page=1, limit=30):
     gqlString = f"""
     query {{
       loggedUser{{

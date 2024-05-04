@@ -22,6 +22,9 @@ import os
 # https://developers.google.com/calendar/api/quickstart/python
 # https://developers.google.com/resources/api-libraries/documentation/calendar/v3/python/latest/calendar_v3.events.html#list
 
+# TODO: Have Google calendar events automatically put the correct group ID, tags, category, and online address
+
+
 class GCalAPI:
     _apiClient: Resource
     
@@ -50,8 +53,9 @@ class GCalAPI:
             
         
         self._apiClient = build("calendar", "v3", credentials=credentialTokens)
+    
 
-    def getAllEventsAWeekFromNow(self, calendarId: str, dateOfLastEventScraped: datetime = None) -> [EventType]:
+    def getAllEventsAWeekFromNow(self, calendarId: str, mobilizonGroupID: str, dateOfLastEventScraped: datetime = None) -> [EventType]:
         """Get events all events for that specific calender a week from today.
 
         Args:

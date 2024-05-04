@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime
 
 
 class UploadedEventRow:
@@ -7,8 +8,9 @@ class UploadedEventRow:
     title: str
     date: str
     groupID: str
+    groupName: str
     
-    def __init__(self, uuid: str, id: str, title: str, date: str, groupID: str):
+    def __init__(self, uuid: str, id: str, title: str, date: str, groupID: str, groupName: str):
         """_summary_
 
         Args:
@@ -24,6 +26,7 @@ class UploadedEventRow:
         self.title = title
         self.date = date
         self.groupID = groupID
+        self.groupName = groupName
 
 class SQLiteDB:
     sql_db_connection: sqlite3.Connection
@@ -34,7 +37,7 @@ class SQLiteDB:
         db_cursor = sql_db_connection.cursor()
 
         db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {self.uploaded_events_table_name} 
-                          (uuid PRIMARY KEY, id, title text, date text, group_id)""")
+                          (uuid PRIMARY KEY, id, title text, date text, group_id, group_name)""")
         self.sql_db_connection = sql_db_connection
 
     def close(self):
@@ -46,7 +49,7 @@ class SQLiteDB:
         for row in rowsToAdd:
             insertArray.append((row.uuid, row.id, row.title, row.date, row.groupID))
         
-        db_cursor.executemany(f"INSERT INTO {self.uploaded_events_table_name} VALUES (?, ?, ?, ? , ?)", insertArray)
+        db_cursor.executemany(f"INSERT INTO {self.uploaded_events_table_name} VALUES (?, ?, ?, ? , ?, ?)", insertArray)
         self.sql_db_connection.commit()
 
 
@@ -68,6 +71,10 @@ class SQLiteDB:
         # Comma at the end of (groupID,) turns it into a tuple
         res = db_cursor.execute(f"SELECT * FROM {self.uploaded_events_table_name} WHERE group_id = ?", (groupID,))
         return res
+    
+    # TODO: Create SQL that does this
+    def getLastEventForCalendarID(self, calendarID) -> datetime:
+        pass
         
         
     
