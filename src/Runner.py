@@ -39,7 +39,8 @@ class Runner:
             for google_calendar_id in google_calendars[key]["googleIDs"]:
                 lastUploadedEventDate = self.cache_db.getLastEventForCalendarID(google_calendar_id)
                 events: [EventType] = google_calendar_api.getAllEventsAWeekFromNow(
-                    google_calendar_id, google_calendars[key]["groupID"], lastUploadedEventDate)
+                    google_calendar_id, google_calendars[key]["groupID"], 
+                    google_calendars[key]["defaultImageID"] ,lastUploadedEventDate)
                 
                 uploadedEvents = []
                 for event in events:

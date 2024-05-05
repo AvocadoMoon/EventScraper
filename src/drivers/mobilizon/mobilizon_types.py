@@ -77,7 +77,11 @@ class EventParameters:
             super().__init__(**args)
     
     class MediaInput(BaseModel):
-        media_id: int = None
+        mediaId: str = None
+        
+        def __init__(self, mediaId:str):
+            args = _generate_args(locals())
+            super().__init__(**args)
     
     
         
@@ -114,7 +118,8 @@ class EventType(BaseModel):
     def __init__(self, attributedToId:int, title: str, description: str, 
                           beginsOn:str, onlineAddress:str = None, endsOn:str = None,
                           physicalAddress: EventParameters.Address = None,
-                          category: EventParameters.Categories = None, tags:[] = None):
+                          category: EventParameters.Categories = None, tags:[] = None,
+                          picture: EventParameters.MediaInput = None):
         args = _generate_args(locals())
         super().__init__(**args)
 

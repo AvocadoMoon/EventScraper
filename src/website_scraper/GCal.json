@@ -1,27 +1,33 @@
 {
     "Bradley Street Bike Co-Op":{
         "googleIDs": ["bsbc.co_c4dt5esnmutedv7p3nu01aerhk@group.calendar.google.com"],
-        "groupID": 15
+        "groupID": 15,
+        "defaultImageID": "86"
     },
     "Save The Sound":{
         "googleIDs": ["ctenvironment@gmail.com"],
-        "groupID": 16
+        "groupID": 16,
+        "defaultImageID": "87"
     },
     "Hartford Jazz Society": {
         "googleIDs" : ["1323fv30pk4la63e4je86sook47avts9@import.calendar.google.com"],
-        "groupID": 17
+        "groupID": 17,
+        "defaultImageID": "88"
     },
     "Healing Meals" : {
         "googleIDs" : ["6lrbqnpdr3unfvr8oolv089hqu37nal6@import.calendar.google.com"],
-        "groupID": 18
+        "groupID": 18,
+        "defaultImageID": "89"
     },
     "Downtown New Haven": {
         "googleIDs": ["3sb3oi1p84kjscr1lrpa15paavbhtrol@import.calendar.google.com"],
-        "groupID": 19
+        "groupID": 19,
+        "defaultImageID": "90"
     },
     "The Institute Library": {
         "googleIDs": ["ke5stbpohu2nb4qh3f1r9vgci4nv5knb@import.calendar.google.com"],
-        "groupID": 20
+        "groupID": 20,
+        "defaultImageID": "91"
     },
     "Elm City Games": {
         "googleIDs": ["c_2fc67df8dc1e133f005ee39ac99fe484229ebd6d96a0e0f53fb322c2609e6b0e@group.calendar.google.com",
@@ -30,18 +36,22 @@
     "c_fe0f40abce0f4fa9b355dd8841fa0005d026bd35d1152496e5677011d7dee699@group.calendar.google.com",
     "c_501e2535f006ba84b5c9e7be6478db06622b38739fa72b71db9ebf536c44c1b9@group.calendar.google.com"],
         "itemsInList": ["Board Games", "Jigsaw Puzzles", "Magic the Gathering", "Miniature Games", "Trading Card Games"],
-        "groupID": 21
+        "groupID": 21,
+        "defaultImageID": "92"
     },
     "New Haven Library": {
         "googleIDs": ["8qf27rmmeun7mat412odluuha11umbhm@import.calendar.google.com"],
-        "groupID": 22
+        "groupID": 22,
+        "defaultImageID": "93"
     },
     "Hartford Library": {
         "googleIDs": ["u4am2mlf0vr9mh75ejsv3mqgn9rrm7av@import.calendar.google.com"],
-        "groupID": 23
+        "groupID": 23,
+        "defaultImageID": "94"
     },
     "WBT": {
         "googleIDs": ["wbtblackbox@gmail.com"],
-        "groupID": 24
+        "groupID": 24,
+        "defaultImageID": "95"
     }
 }

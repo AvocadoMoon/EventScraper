@@ -1,21 +1,21 @@
 from src.drivers.mobilizon.mobilizon import MobilizonAPI
 from src.drivers.mobilizon.mobilizon_types import EventParameters, EventType
 from src.drivers.mobilizon.db_cache import UploadedEventRow, SQLiteDB
-from src.website_scraper.google_calendar import getCalenderReadClient, getAllEventsAWeekFromNow
+from src.website_scraper.google_calendar import GCalAPI
 from datetime import timezone, timedelta, datetime
 import json
 import os
 
 
-# TO DO: 
-# - Fix location 
-# - Have Google calendar events automatically put the correct group ID, tags, category, and online address
+# TODO: Fix location 
+
+endpoint = "https://ctgrassroots.org/graphiql"
+secrets: dict = None
+with open(f"{os.getcwd()}/src/secrets.json", "r") as f:
+    secrets = json.load(f)
 
 def manualTestCreation():
-    endpoint = "https://ctgrassroots.org/graphiql"
-    secrets: dict = None
-    with open(f"{os.getcwd()}/src/secrets.json", "r") as f:
-        secrets = json.load(f)
+    
 
     mobilizonAPI = MobilizonAPI(endpoint, secrets["email"], secrets["password"])
     # Time object requires timeZone
@@ -26,9 +26,11 @@ def manualTestCreation():
                                          country="USA")
     
     # print(mobilizonAPI.getActors())
+    defaultImage = EventParameters.MediaInput(mediaId="87")
     testEvent = EventType(14, "Test93", "Test description", beginsOn.isoformat(), "https://www.cafenine.com/",
-        endsOn.isoformat(), cafe9Local, category=EventParameters.Categories.book_clubs)
-    mobilizonAPI.bot_created_event(testEvent)
+        endsOn.isoformat(), cafe9Local, category=EventParameters.Categories.book_clubs,
+        picture=defaultImage)
+    print(mobilizonAPI.bot_created_event(testEvent))
     # with open("//home/zek/Documents/Code/CTEventScraper/src/Duck.jpg", "rb") as f:
     #     params = {"file": f}
     #     print(mobilizonAPI.upload_file("Duck", f))
@@ -38,13 +40,13 @@ def manualTestCreation():
 def manualTestGoogleCalendar(printEvents:bool = False):
     publicCalenderIDs = ["bsbc.co_c4dt5esnmutedv7p3nu01aerhk@group.calendar.google.com",
                         "ctenvironment@gmail.com"]
-    service = getCalenderReadClient()
+    google_calendar_api = GCalAPI()
 
     exampleTimeOffset = datetime.utcnow() + timedelta(days=3)
     exampleTimeOffset = exampleTimeOffset.isoformat() + "Z"
     allEvents = []
     for k in publicCalenderIDs:
-        allEvents.append(getAllEventsAWeekFromNow(service, k))
+        allEvents.append(google_calendar_api.getAllEventsAWeekFromNow(k, 2))
     
     if(printEvents):
         for j in allEvents:
@@ -60,6 +62,7 @@ def manualTestCacheDB():
         UploadedEventRow("uuid5", "id1", "title1", "2022-05-04T10:00:00-04:00", "group2"),
         UploadedEventRow("uuid3", "id1", "title1", "2022-05-04T10:00:00-04:00", "group2")
     ]
+    allEvents
     db = SQLiteDB()
     db.connectAndInitializeDB()
     # db.deleteAllMonthOldEvents()
@@ -67,9 +70,21 @@ def manualTestCacheDB():
     print(db.selectAllFromTable().fetchall())
     db.close()
 
+def getEventBotInfo():
+    mobilizonAPI = MobilizonAPI(endpoint, secrets["email"], secrets["password"])
+    print(mobilizonAPI.getActors())
+    print(mobilizonAPI.getGroups())
+    mobilizonAPI.logout()
+
+
 if __name__ == "__main__":
     
-    # manualTestCreation()
+    manualTestCreation()
     # manualTestGoogleCalendar(True)
-    manualTestCacheDB()
+    # manualTestCacheDB()
+    # getEventBotInfo()
     
+    
+    
+    pass
+

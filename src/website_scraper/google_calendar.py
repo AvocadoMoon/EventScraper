@@ -55,7 +55,7 @@ class GCalAPI:
         self._apiClient = build("calendar", "v3", credentials=credentialTokens)
     
 
-    def getAllEventsAWeekFromNow(self, calendarId: str, mobilizonGroupID: str, dateOfLastEventScraped: datetime = None) -> [EventType]:
+    def getAllEventsAWeekFromNow(self, calendarId: str, mobilizonGroupID: str, photoID: str, dateOfLastEventScraped: datetime = None) -> [EventType]:
         """Get events all events for that specific calender a week from today.
 
         Args:
@@ -88,12 +88,13 @@ class GCalAPI:
             events = []
             for googleEvent in googleEvents:
                 eventAddress = _parse_google_location(googleEvent.get("location"))
-                event = EventType(attributedToId=0, 
+                event = EventType(attributedToId=mobilizonGroupID, 
                                 title= googleEvent["summary"], description=googleEvent.get("description"),
                                 beginsOn=googleEvent["start"].get("dateTime"),
                                 endsOn=googleEvent["end"].get("dateTime"),
                                 onlineAddress="", physicalAddress=eventAddress,
-                                category=None, tags=None)
+                                category=None, tags=None,
+                                picture=EventParameters.MediaInput(photoID))
                 events.append(event)
             
             return events
