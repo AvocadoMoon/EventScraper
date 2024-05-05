@@ -4,7 +4,7 @@ from gql.transport.exceptions import TransportQueryError
 from requests.exceptions import HTTPError
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 from src.drivers.mobilizon.gql_requests import EventGQL, AuthenticationGQL, ActorsGQL
-from src.drivers.mobilizon.mobilizon_types import EventType, Actor, EventParameters
+from src.drivers.mobilizon.mobilizon_types import EventType, Actor
 import requests
 import json
 
@@ -94,11 +94,12 @@ class MobilizonAPI:
     # events
         
     
-    def bot_created_event(self, event_type: EventType):
+    def bot_created_event(self, event_type: EventType) -> dict:
         event_type.organizerActorId = self.bot_actor.id
         # print(EventGQL.createEventGQL(event_type))
 
-        self._mobilizon_client.publish(EventGQL.createEventGQL(event_type))
+        eventID = self._mobilizon_client.publish(EventGQL.createEventGQL(event_type))
+        return {"id": eventID["createEvent"]["id"], "uuid": eventID["createEvent"]["uuid"]}
     
     def upload_file(self, name: str, file):
         variables = {"name": "Duck.jpg", "file": "theFiles", "actorID": self.bot_actor.id}
@@ -120,6 +121,9 @@ class MobilizonAPI:
     
     def getActors(self):
         return self._mobilizon_client.publish(ActorsGQL.getIdentities())
+    
+    def getGroups(self):
+        return self._mobilizon_client.publish(ActorsGQL.getGroups('"eventbot"'))
 
     # def update_event(self, actor_id, variables):
     # 	variables["organizerActorId"] = actor_id

@@ -32,13 +32,17 @@ class SQLiteDB:
     sql_db_connection: sqlite3.Connection
     uploaded_events_table_name = "uploaded_events"
     
-    def connectAndInitializeDB(self) -> sqlite3.Connection:
-        sql_db_connection = sqlite3.connect("event_cache.db")
-        db_cursor = sql_db_connection.cursor()
-
+    def __init__(self, inMemorySQLite: bool = False):
+        if inMemorySQLite:
+            self.sql_db_connection = sqlite3.connect(":memory:")
+        else:
+            self.sql_db_connection = sqlite3.connect("event_cache.db")
+        self.initializeDB()
+    
+    def initializeDB(self) -> sqlite3.Connection:
+        db_cursor = self.sql_db_connection.cursor()
         db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {self.uploaded_events_table_name} 
                           (uuid PRIMARY KEY, id, title text, date text, group_id, group_name)""")
-        self.sql_db_connection = sql_db_connection
 
     def close(self):
         self.sql_db_connection.close()
