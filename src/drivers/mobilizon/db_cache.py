@@ -9,8 +9,9 @@ class UploadedEventRow:
     date: str
     groupID: str
     groupName: str
+    calendar_id: str
     
-    def __init__(self, uuid: str, id: str, title: str, date: str, groupID: str, groupName: str):
+    def __init__(self, uuid: str, id: str, title: str, date: str, groupID: str, groupName: str, calendar_id: str):
         """_summary_
 
         Args:
@@ -27,6 +28,8 @@ class UploadedEventRow:
         self.date = date
         self.groupID = groupID
         self.groupName = groupName
+        self.calendar_id = calendar_id
+    
 
 class SQLiteDB:
     sql_db_connection: sqlite3.Connection
@@ -42,18 +45,16 @@ class SQLiteDB:
     def initializeDB(self) -> sqlite3.Connection:
         db_cursor = self.sql_db_connection.cursor()
         db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {self.uploaded_events_table_name} 
-                          (uuid PRIMARY KEY, id, title text, date text, group_id, group_name)""")
+                          (uuid PRIMARY KEY, id, title text, date text, group_id, group_name, calendar_id)""")
 
     def close(self):
         self.sql_db_connection.close()
 
-    def insertUploadedEvent(self, rowsToAdd: [UploadedEventRow]):
+    def insertUploadedEvent(self, rowToAdd: UploadedEventRow):
         db_cursor: sqlite3.Cursor = self.sql_db_connection.cursor()
-        insertArray = []
-        for row in rowsToAdd:
-            insertArray.append((row.uuid, row.id, row.title, row.date, row.groupID))
+        insertRow = (rowToAdd.uuid, rowToAdd.id, rowToAdd.title, rowToAdd.date, rowToAdd.groupID, rowToAdd.groupName, rowToAdd.calendar_id)
         
-        db_cursor.executemany(f"INSERT INTO {self.uploaded_events_table_name} VALUES (?, ?, ?, ? , ?, ?)", insertArray)
+        db_cursor.execute(f"INSERT INTO {self.uploaded_events_table_name} VALUES (?, ?, ?, ? , ?, ?, ?)", insertRow)
         self.sql_db_connection.commit()
 
 
@@ -76,9 +77,21 @@ class SQLiteDB:
         res = db_cursor.execute(f"SELECT * FROM {self.uploaded_events_table_name} WHERE group_id = ?", (groupID,))
         return res
     
-    # TODO: Create SQL that does this
+    def selectAllRowsWithCalendarID(self, calendar_id):
+        db_cursor = self.sql_db_connection.cursor()
+        # Comma at the end of (groupID,) turns it into a tuple
+        res = db_cursor.execute(f"SELECT * FROM {self.uploaded_events_table_name} WHERE calendar_id = ?", (calendar_id,))
+        return res
+    
     def getLastEventForCalendarID(self, calendarID) -> datetime:
-        pass
+        db_cursor = self.sql_db_connection.cursor()
+        res = db_cursor.execute(f"""SELECT date FROM {self.uploaded_events_table_name} WHERE calendar_id = '{calendarID}'
+                                ORDER BY date DESC LIMIT 1""")
+        return datetime.fromisoformat(res.fetchone()[0])
+    
+    def noEntriesWithCalendarID(self, calendar_id: str) -> bool:
+        res = self.selectAllRowsWithCalendarID(calendar_id)
+        return len(res.fetchall()) == 0
         
         
     

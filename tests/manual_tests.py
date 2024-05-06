@@ -46,7 +46,7 @@ def manualTestGoogleCalendar(printEvents:bool = False):
     exampleTimeOffset = exampleTimeOffset.isoformat() + "Z"
     allEvents = []
     for k in publicCalenderIDs:
-        allEvents.append(google_calendar_api.getAllEventsAWeekFromNow(k, 2))
+        allEvents.append(google_calendar_api.getAllEventsAWeekFromNow(k, 2, "3"))
     
     if(printEvents):
         for j in allEvents:
@@ -58,16 +58,15 @@ def manualTestGoogleCalendar(printEvents:bool = False):
 
 def manualTestCacheDB():
     allEvents: [UploadedEventRow] = [
-        UploadedEventRow("uuid1", "id1", "title1", "2022-05-04T10:00:00-04:00", "group2"),
-        UploadedEventRow("uuid5", "id1", "title1", "2022-05-04T10:00:00-04:00", "group2"),
-        UploadedEventRow("uuid3", "id1", "title1", "2022-05-04T10:00:00-04:00", "group2")
+        UploadedEventRow("uuid1", "id1", "title1", "2022-05-05T16:00:00-04:00", "2", "group2", "123"),
+        UploadedEventRow("uuid5", "id1", "title1", "2022-05-05T10:00:00-04:00", "2", "group2", "123"),
+        UploadedEventRow("uuid3", "id1", "title1", "2022-05-04T10:00:00-04:00", "2", "group2", "123")
     ]
-    allEvents
-    db = SQLiteDB()
-    db.connectAndInitializeDB()
-    # db.deleteAllMonthOldEvents()
-    # db.insertUploadedEvent(allEvents)
-    print(db.selectAllFromTable().fetchall())
+    db = SQLiteDB(True)
+    for k in allEvents:
+        db.insertUploadedEvent(k)
+    # print(db.selectAllFromTable().fetchall())
+    print(db.getLastEventForCalendarID("123").isoformat())
     db.close()
 
 def getEventBotInfo():
@@ -79,8 +78,8 @@ def getEventBotInfo():
 
 if __name__ == "__main__":
     
-    manualTestCreation()
-    # manualTestGoogleCalendar(True)
+    # manualTestCreation()
+    manualTestGoogleCalendar(True)
     # manualTestCacheDB()
     # getEventBotInfo()
     

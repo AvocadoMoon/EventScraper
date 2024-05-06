@@ -29,7 +29,7 @@ class GCalAPI:
     _apiClient: Resource
     
     def __init__(self):
-        self.getCalenderReadClient()
+        self._initCalendarReadClient()
     
     def _initCalendarReadClient(self):
         SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
@@ -81,15 +81,15 @@ class GCalAPI:
                 .execute()
             )
             googleEvents = events_result.get("items", [])
-            if not googleEvents:
+            if len(googleEvents) == 0:
                 print("No upcoming events found.")
-                return
+                return googleEvents
 
             events = []
             for googleEvent in googleEvents:
                 eventAddress = _parse_google_location(googleEvent.get("location"))
                 event = EventType(attributedToId=mobilizonGroupID, 
-                                title= googleEvent["summary"], description=googleEvent.get("description"),
+                                title= googleEvent.get("summary"), description=googleEvent.get("description"),
                                 beginsOn=googleEvent["start"].get("dateTime"),
                                 endsOn=googleEvent["end"].get("dateTime"),
                                 onlineAddress="", physicalAddress=eventAddress,
@@ -100,6 +100,7 @@ class GCalAPI:
             return events
         except HttpError as error:
             print(f"An error occurred: {error}")
+            return []
     
     def close(self):
         self._apiClient.close()

@@ -3,6 +3,8 @@ import sqlite3
 import os
 import unittest
 
+# TODO: Test getting the last event uploaded for a specific group
+
 class EventTableTest(unittest.TestCase):
     def test_UploadedEventsTable(self):
         group1: [UploadedEventRow] = [
