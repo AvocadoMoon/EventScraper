@@ -65,15 +65,18 @@ class GCalAPI:
         """
         try:
             # Call the Calendar API, 'Z' indicates UTC time
-            dateOfLastEventScrapedString = datetime.utcnow().isoformat() + "Z" if dateOfLastEventScraped is None else dateOfLastEventScraped.isoformat() + "Z"
-            weekFromNow = datetime.utcnow() + timedelta(days=7)
-            weekFromNow = weekFromNow.isoformat() + "Z"
+            stringDateLastEvent = datetime.utcnow().astimezone().isoformat()
+            if dateOfLastEventScraped is not None: 
+                stringDateLastEvent = dateOfLastEventScraped.isoformat()
+            print(stringDateLastEvent)
+            weekFromNow = datetime.utcnow().astimezone() + timedelta(days=7)
+            weekFromNow = weekFromNow.isoformat()
             
             events_result = (
                 self._apiClient.events()
                 .list(
                     calendarId=calendarId,
-                    timeMin=dateOfLastEventScrapedString,
+                    timeMin=stringDateLastEvent,
                     timeMax=weekFromNow,
                     singleEvents=True,
                     orderBy="startTime",
@@ -100,7 +103,6 @@ class GCalAPI:
             return events
         except HttpError as error:
             print(f"An error occurred: {error}")
-            return []
     
     def close(self):
         self._apiClient.close()

@@ -87,7 +87,11 @@ class SQLiteDB:
         db_cursor = self.sql_db_connection.cursor()
         res = db_cursor.execute(f"""SELECT date FROM {self.uploaded_events_table_name} WHERE calendar_id = '{calendarID}'
                                 ORDER BY date DESC LIMIT 1""")
-        return datetime.fromisoformat(res.fetchone()[0])
+        # Conversion to ISO format does not like the Z, that represents UTC aka no time zone
+        # so using +00:00 is an equivalent to it
+        dateString = res.fetchone()[0].replace('Z', '+00:00')
+        print(dateString)
+        return datetime.fromisoformat(dateString)
     
     def noEntriesWithCalendarID(self, calendar_id: str) -> bool:
         res = self.selectAllRowsWithCalendarID(calendar_id)

@@ -27,8 +27,8 @@ class TestRunner(unittest.TestCase):
         
         self.assertEqual(len(db_results), len(second_db_results))
         
-        for row in len(db_results):
-            for column in len(row):
+        for row in range(len(db_results)):
+            for column in range(len(db_results[row])):
                 self.assertEqual(db_results[row][column], second_db_results[row][column])
         
 
