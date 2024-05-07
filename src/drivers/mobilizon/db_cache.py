@@ -1,6 +1,9 @@
 import sqlite3
 from datetime import datetime
+import logging
 
+logger = logging.getLogger(__name__)
+# logger.setLevel(logging.DEBUG)
 
 class UploadedEventRow:
     uuid: str
@@ -85,17 +88,25 @@ class SQLiteDB:
     
     def getLastEventForCalendarID(self, calendarID) -> datetime:
         db_cursor = self.sql_db_connection.cursor()
-        res = db_cursor.execute(f"""SELECT date FROM {self.uploaded_events_table_name} WHERE calendar_id = '{calendarID}'
-                                ORDER BY date DESC LIMIT 1""")
+        res = db_cursor.execute(f"""SELECT date FROM {self.uploaded_events_table_name} WHERE calendar_id = ?
+                                ORDER BY date DESC LIMIT 1""", (calendarID, ))
         # Conversion to ISO format does not like the Z, that represents UTC aka no time zone
         # so using +00:00 is an equivalent to it
-        dateString = res.fetchone()[0].replace('Z', '+00:00')
-        print(dateString)
+        dateString = res.fetchone()[0]
+        logger.debug(f"Last date found for calendar ID {calendarID}: {dateString}")
         return datetime.fromisoformat(dateString)
     
     def noEntriesWithCalendarID(self, calendar_id: str) -> bool:
         res = self.selectAllRowsWithCalendarID(calendar_id)
         return len(res.fetchall()) == 0
+    
+    def entryAlreadyInCache(self, date:str, title:str, calendar_id:str) -> bool:
+        db_cursor = self.sql_db_connection.cursor()
+        res = db_cursor.execute(f"""SELECT * FROM {self.uploaded_events_table_name} WHERE 
+                                date = ? AND title = ? AND calendar_id = ?""", (date, title, calendar_id))
+        if(len(res.fetchall()) > 0):
+            return True
+        return False
         
         
     
