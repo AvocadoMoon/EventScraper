@@ -101,9 +101,10 @@ class GCalAPI:
                 if starTimeGoogleEvent is not None and endTimeGooglEvent is not None:
                     startDateTime = datetime.fromisoformat(starTimeGoogleEvent.replace('Z', '+00:00')).astimezone()
                     endDateTime = datetime.fromisoformat(endTimeGooglEvent.replace('Z', '+00:00')).astimezone()
-                    if not checkCacheFunction(startDateTime.isoformat(), googleEvent.get("summary"), calendarId):
+                    title = googleEvent.get("summary")
+                    if not checkCacheFunction(startDateTime.isoformat(), title, calendarId):
                         event = EventType(attributedToId=mobilizonGroupID, 
-                                        title= googleEvent.get("summary"), description=googleEvent.get("description"),
+                                        title= title, description=googleEvent.get("description"),
                                         beginsOn=startDateTime.isoformat(),
                                         endsOn=endDateTime.isoformat(),
                                         onlineAddress="", physicalAddress=eventAddress,
@@ -131,10 +132,3 @@ def _parse_google_location(location:str):
             address = EventParameters.Address(locality=tokens[2], postalCode=tokens[3], street=tokens[1], country=tokens[4])
 
     return address
-
-def _floor_to_nearest_hour(dateTimeString: str):
-    dateAndTime = dateTimeString.split("T")
-    timeZone = dateAndTime[1].split("-")
-    time = timeZone[0].split(":")
-    flooredDateTime = dateAndTime[0] + "T" + time[0] + ":00:00-" + timeZone[1]
-    return flooredDateTime
