@@ -4,6 +4,10 @@ from src.drivers.mobilizon.mobilizon_types import EventType
 from src.website_scraper.google_calendar import GCalAPI
 import json
 import os
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 # TODO: Create tests that simulate the runner and everything it does (except for actually uploading)
 # TODO: Ensure the uploaded dates and dates retrieved are the same
@@ -36,7 +40,7 @@ class Runner:
             
             events: [EventType] = google_calendar_api.getAllEventsAWeekFromNow(
                 google_calendar_id, google_calendars[key]["groupID"], 
-                google_calendars[key]["defaultImageID"] ,lastUploadedEventDate)
+                google_calendars[key]["defaultImageID"], self.cache_db.entryAlreadyInCache,lastUploadedEventDate)
             if (len(events) == 0):
                 return
             for event in events:
@@ -63,6 +67,7 @@ class Runner:
             google_calendars = json.load(f)
 
         for key, value in google_calendars.items():
+            logger.info(f"Getting events from calendar {key}")
             for google_calendar_id in google_calendars[key]["googleIDs"]:
                 uploadEventsRetrievedFromCalendarID()
         

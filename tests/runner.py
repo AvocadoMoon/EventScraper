@@ -3,6 +3,7 @@ from src.Runner import Runner
 import sqlite3
 import os
 import unittest
+import logging
 
 # TODO: Test the entire runner interaction that it executes
 
@@ -24,7 +25,7 @@ class TestRunner(unittest.TestCase):
         
         self.runner.getGCalEventsAndUploadThem()
         second_db_results = self.runner.cache_db.selectAllFromTable().fetchall()
-        
+            
         self.assertEqual(len(db_results), len(second_db_results))
         
         for row in range(len(db_results)):
@@ -33,4 +34,5 @@ class TestRunner(unittest.TestCase):
         
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.ERROR)
     unittest.main()

@@ -6,6 +6,10 @@ from googleapiclient.errors import HttpError
 from datetime import datetime, timedelta
 from src.drivers.mobilizon.mobilizon_types import EventType, EventParameters
 import os
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 # Subscribe to the calendars
 # https://webapps.stackexchange.com/questions/5217/how-can-i-find-the-subscribe-url-from-the-google-calendar-embed-source-code
@@ -55,7 +59,7 @@ class GCalAPI:
         self._apiClient = build("calendar", "v3", credentials=credentialTokens)
     
 
-    def getAllEventsAWeekFromNow(self, calendarId: str, mobilizonGroupID: str, photoID: str, dateOfLastEventScraped: datetime = None) -> [EventType]:
+    def getAllEventsAWeekFromNow(self, calendarId: str, mobilizonGroupID: str, photoID: str, checkCacheFunction, dateOfLastEventScraped: datetime = None) -> [EventType]:
         """Get events all events for that specific calender a week from today.
 
         Args:
@@ -68,7 +72,7 @@ class GCalAPI:
             stringDateLastEvent = datetime.utcnow().astimezone().isoformat()
             if dateOfLastEventScraped is not None: 
                 stringDateLastEvent = dateOfLastEventScraped.isoformat()
-            print(stringDateLastEvent)
+            logger.info(f"Time of last event: {stringDateLastEvent}")
             weekFromNow = datetime.utcnow().astimezone() + timedelta(days=7)
             weekFromNow = weekFromNow.isoformat()
             
@@ -85,24 +89,31 @@ class GCalAPI:
             )
             googleEvents = events_result.get("items", [])
             if len(googleEvents) == 0:
-                print("No upcoming events found.")
+                logger.info(f"No upcoming events for calendarID {calendarId}\n")
                 return googleEvents
 
             events = []
             for googleEvent in googleEvents:
                 eventAddress = _parse_google_location(googleEvent.get("location"))
-                event = EventType(attributedToId=mobilizonGroupID, 
-                                title= googleEvent.get("summary"), description=googleEvent.get("description"),
-                                beginsOn=googleEvent["start"].get("dateTime"),
-                                endsOn=googleEvent["end"].get("dateTime"),
-                                onlineAddress="", physicalAddress=eventAddress,
-                                category=None, tags=None,
-                                picture=EventParameters.MediaInput(photoID))
-                events.append(event)
+                starTimeGoogleEvent = googleEvent["start"].get("dateTime")
+                endTimeGooglEvent = googleEvent["end"].get("dateTime")
+                
+                if starTimeGoogleEvent is not None and endTimeGooglEvent is not None:
+                    startDateTime = datetime.fromisoformat(starTimeGoogleEvent.replace('Z', '+00:00')).astimezone()
+                    endDateTime = datetime.fromisoformat(endTimeGooglEvent.replace('Z', '+00:00')).astimezone()
+                    if not checkCacheFunction(startDateTime.isoformat(), googleEvent.get("summary"), calendarId):
+                        event = EventType(attributedToId=mobilizonGroupID, 
+                                        title= googleEvent.get("summary"), description=googleEvent.get("description"),
+                                        beginsOn=startDateTime.isoformat(),
+                                        endsOn=endDateTime.isoformat(),
+                                        onlineAddress="", physicalAddress=eventAddress,
+                                        category=None, tags=None,
+                                        picture=EventParameters.MediaInput(photoID))
+                        events.append(event)
             
             return events
         except HttpError as error:
-            print(f"An error occurred: {error}")
+            logger.error(f"An error occurred: {error}")
     
     def close(self):
         self._apiClient.close()
@@ -120,3 +131,10 @@ def _parse_google_location(location:str):
             address = EventParameters.Address(locality=tokens[2], postalCode=tokens[3], street=tokens[1], country=tokens[4])
 
     return address
+
+def _floor_to_nearest_hour(dateTimeString: str):
+    dateAndTime = dateTimeString.split("T")
+    timeZone = dateAndTime[1].split("-")
+    time = timeZone[0].split(":")
+    flooredDateTime = dateAndTime[0] + "T" + time[0] + ":00:00-" + timeZone[1]
+    return flooredDateTime
