@@ -4,10 +4,13 @@ from pydantic import BaseModel
 from enum import Enum
 
 
+# TODO: Clean all text for dangerous input
 
 # EventType = MobilizonTypes.EventType
 # https://github.com/framasoft/mobilizon/blob/main/docs/dev.md
 
+# Cleaning Received Text
+# https://stackoverflow.com/questions/10993612/how-to-remove-xa0-from-string-in-python
 
 def _conditional_attribute(key: str, value):
   return ((key + ": " + str(value) + ",\n") if value is not None else "")
@@ -19,7 +22,10 @@ def conditional_gql_inputs(classDataObject: BaseModel or dict):
   for key, value in classDict.items():
     valueType = type(value)
     if (valueType is str or valueType is int):
-      value = f'"{value}"' if isinstance(value, (str)) else value
+      if (valueType is str):
+        value = value.replace('"', "'")
+        # value = re.sub(r"(\n{2,})|( +(?=\n))", "", value) #No multiple newlines in succession
+        value = f'"""{value}"""'
       gqlString += _conditional_attribute(key, value)
     elif (isinstance(value, Enum)):
       value = value.value

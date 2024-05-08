@@ -97,14 +97,16 @@ class GCalAPI:
                 eventAddress = _parse_google_location(googleEvent.get("location"))
                 starTimeGoogleEvent = googleEvent["start"].get("dateTime")
                 endTimeGooglEvent = googleEvent["end"].get("dateTime")
+                title = googleEvent.get("summary")
+                description = googleEvent.get("description")
+
                 
-                if starTimeGoogleEvent is not None and endTimeGooglEvent is not None:
+                if None not in [starTimeGoogleEvent, endTimeGooglEvent, title, description]:
                     startDateTime = datetime.fromisoformat(starTimeGoogleEvent.replace('Z', '+00:00')).astimezone()
                     endDateTime = datetime.fromisoformat(endTimeGooglEvent.replace('Z', '+00:00')).astimezone()
-                    title = googleEvent.get("summary")
                     if not checkCacheFunction(startDateTime.isoformat(), title, calendarId):
                         event = EventType(attributedToId=mobilizonGroupID, 
-                                        title= title, description=googleEvent.get("description"),
+                                        title= title, description=description,
                                         beginsOn=startDateTime.isoformat(),
                                         endsOn=endDateTime.isoformat(),
                                         onlineAddress="", physicalAddress=eventAddress,

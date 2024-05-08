@@ -9,8 +9,6 @@ import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-# TODO: Create tests that simulate the runner and everything it does (except for actually uploading)
-# TODO: Ensure the uploaded dates and dates retrieved are the same
 
 class Runner:
     mobilizonAPI: MobilizonAPI
@@ -79,4 +77,8 @@ class Runner:
         self.cache_db.close()
     
 
-
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.ERROR)
+    runner = Runner()
+    runner.getGCalEventsAndUploadThem()
+    runner.cleanUp()
