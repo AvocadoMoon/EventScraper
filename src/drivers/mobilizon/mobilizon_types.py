@@ -60,19 +60,26 @@ class EventParameters:
         """Address object that Mobilizon can utilize
 
         Args:
-            geom: State
+            geom: Geo-coordinates for the point where the address is
+            region: The state of this address
             locality: Town
             postalCode: ZipCode
             street: Street
             country: Country
+            originId: The ID affiliated with the api that gave the location info
         """
-        geom: str = None # State
+        geom: str = None
         locality: str  # Town
         postalCode: str # ZipCode
         street: str # Street
         country: str # 
+        type: str = None
+        region: str = "Connecticut"
+        timezone: str = "America/New_York"
+        description: str = "Cafe9"
+        originId: str = None
         
-        def __init__(self, locality:str, postalCode:str, street:str, country:str, geom:str = None):
+        def __init__(self, locality:str, postalCode:str, street:str, country:str, type=None, originId=None, region:str = "Connecticut", geom:str = None):
             args = _generate_args(locals())
             super().__init__(**args)
     

@@ -5,7 +5,7 @@ from src.website_scraper.google_calendar import GCalAPI
 from datetime import timezone, timedelta, datetime
 import json
 import os
-
+from geopy.geocoders import Nominatim
 
 # TODO: Fix location 
 
@@ -21,9 +21,15 @@ def manualTestCreation():
     # Time object requires timeZone
     beginsOn = datetime(2024, 7, 7, 14, 35, tzinfo=timezone.utc)
     endsOn = datetime(2024, 7, 7, 17, 45, tzinfo=timezone.utc)
+    geo_locator = Nominatim(user_agent="manual test creation")
+    location = geo_locator.geocode("250 State St, New Haven, CT 06510").raw
+    geom = f"{location['lon']};{location['lat']}"
+    print(geom)
     cafe9Local = EventParameters.Address(locality="New Haven", 
-                                         postalCode="CT 06510", street="250 State St", 
-                                         country="USA")
+                                         postalCode="06510", street="250 State St", 
+                                         country="United States", geom=geom,
+                                         originId=f"nominatim:{location['place_id']}",
+                                         type=location['addresstype'])
     
     # print(mobilizonAPI.getActors())
     defaultImage = EventParameters.MediaInput(mediaId="87")
@@ -75,13 +81,22 @@ def getEventBotInfo():
     print(mobilizonAPI.getGroups())
     mobilizonAPI.logout()
 
+def _getAddressInfo():
+    geolocator = Nominatim(user_agent="test nominatim")
+    location = geolocator.geocode("250 State St, New Haven, CT 06510")
+    print(location.address)
+    print(location.latitude, location.longitude)
+    print(location.raw)
+    
+
 
 if __name__ == "__main__":
     
-    # manualTestCreation()
-    manualTestGoogleCalendar(True)
+    manualTestCreation()
+    # manualTestGoogleCalendar(True)
     # manualTestCacheDB()
     # getEventBotInfo()
+    # _getAddressInfo()
     
     
     
