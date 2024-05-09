@@ -7,7 +7,6 @@ import json
 import os
 from geopy.geocoders import Nominatim
 
-# TODO: Fix location 
 
 endpoint = "https://ctgrassroots.org/graphiql"
 secrets: dict = None
@@ -82,21 +81,31 @@ def getEventBotInfo():
     mobilizonAPI.logout()
 
 def _getAddressInfo():
-    geolocator = Nominatim(user_agent="test nominatim")
-    location = geolocator.geocode("250 State St, New Haven, CT 06510")
-    print(location.address)
-    print(location.latitude, location.longitude)
-    print(location.raw)
+    calendar_locations = {
+        "Cafe Nine": "250 State St, New Haven, CT 06510",
+        "BSBCO": "138 Bradley St, New Haven, CT 06511",
+        "Hartford Jazz Society": "56 Arbor St, Hartford, CT 06106",
+        "Healing Meals": "140 Nod Rd, Simsbury, CT 06070",
+        "The Institute Library": "847 Chapel St, New Haven, CT 06510",
+        "Elm City Games": "71 Orange St, New Haven, CT 06510",
+        "New Haven Library": "133 Elm St, New Haven, CT 06510",
+        "Hartford Library": "500 Main St, Hartford, CT 06103",
+        "WBT": "105 Whitney Ave, New Haven, CT 06510"
+    }
+    geo_locator = Nominatim(user_agent="test nominatim")
+    for key, value in calendar_locations.items():
+        location = geo_locator.geocode(value)
+        print(key, location.raw)
     
 
 
 if __name__ == "__main__":
     
-    manualTestCreation()
+    # manualTestCreation()
     # manualTestGoogleCalendar(True)
     # manualTestCacheDB()
     # getEventBotInfo()
-    # _getAddressInfo()
+    _getAddressInfo()
     
     
     

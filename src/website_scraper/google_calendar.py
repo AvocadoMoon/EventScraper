@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 from src.drivers.mobilizon.mobilizon_types import EventType, EventParameters
 import os
 import logging
+from geopy.geocoders import Nominatim
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -28,6 +30,9 @@ logger.setLevel(logging.INFO)
 
 # TODO: Have Google calendar events automatically put the correct group ID, tags, category, and online address
 
+# TODO: Implement the geopy location system within the events scrubbed. 
+# And use a cached one prior to outreach if it has same street and postal code. 
+# If the event has no location use a default one
 
 class GCalAPI:
     _apiClient: Resource
@@ -59,7 +64,9 @@ class GCalAPI:
         self._apiClient = build("calendar", "v3", credentials=credentialTokens)
     
 
-    def getAllEventsAWeekFromNow(self, calendarId: str, mobilizonGroupID: str, photoID: str, checkCacheFunction, dateOfLastEventScraped: datetime = None) -> [EventType]:
+    def getAllEventsAWeekFromNow(self, calendarDict: dict, calendarId: str, 
+                                 checkCacheFunction, 
+                                 dateOfLastEventScraped: datetime = None) -> [EventType]:
         """Get events all events for that specific calender a week from today.
 
         Args:
@@ -94,25 +101,9 @@ class GCalAPI:
 
             events = []
             for googleEvent in googleEvents:
-                eventAddress = _parse_google_location(googleEvent.get("location"))
-                starTimeGoogleEvent = googleEvent["start"].get("dateTime")
-                endTimeGooglEvent = googleEvent["end"].get("dateTime")
-                title = googleEvent.get("summary")
-                description = googleEvent.get("description")
-
-                
-                if None not in [starTimeGoogleEvent, endTimeGooglEvent, title, description]:
-                    startDateTime = datetime.fromisoformat(starTimeGoogleEvent.replace('Z', '+00:00')).astimezone()
-                    endDateTime = datetime.fromisoformat(endTimeGooglEvent.replace('Z', '+00:00')).astimezone()
-                    if not checkCacheFunction(startDateTime.isoformat(), title, calendarId):
-                        event = EventType(attributedToId=mobilizonGroupID, 
-                                        title= title, description=description,
-                                        beginsOn=startDateTime.isoformat(),
-                                        endsOn=endDateTime.isoformat(),
-                                        onlineAddress="", physicalAddress=eventAddress,
-                                        category=None, tags=None,
-                                        picture=EventParameters.MediaInput(photoID))
-                        events.append(event)
+                _process_google_event(googleEvent=googleEvent, eventsToUpload=events,
+                                    checkCacheForEvent=checkCacheFunction,calendarId=calendarId,
+                                    calendarDict=calendarDict)
             
             return events
         except HttpError as error:
@@ -121,8 +112,31 @@ class GCalAPI:
     def close(self):
         self._apiClient.close()
 
-def _parse_google_location(location:str):
-    return None if location is None else None
+def _process_google_event(googleEvent: dict, eventsToUpload: [], checkCacheForEvent, 
+                          calendarId: str, calendarDict: dict):
+    eventAddress = _parse_google_location(googleEvent.get("location"), calendarDict["defaultLocation"])
+    starTimeGoogleEvent = googleEvent["start"].get("dateTime")
+    endTimeGooglEvent = googleEvent["end"].get("dateTime")
+    title = googleEvent.get("summary")
+    description = googleEvent.get("description")
+
+    
+    if None not in [starTimeGoogleEvent, endTimeGooglEvent, title, description]:
+        startDateTime = datetime.fromisoformat(starTimeGoogleEvent.replace('Z', '+00:00')).astimezone()
+        endDateTime = datetime.fromisoformat(endTimeGooglEvent.replace('Z', '+00:00')).astimezone()
+        if not checkCacheForEvent(startDateTime.isoformat(), title, calendarId):
+            event = EventType(attributedToId=calendarDict["groupID"], 
+                            title= title, description=f"Automatically scrapped by Event Bot: \n\n{description}",
+                            beginsOn=startDateTime.isoformat(),
+                            endsOn=endDateTime.isoformat(),
+                            onlineAddress=calendarDict["onlineAddress"], physicalAddress=eventAddress,
+                            category=calendarDict["defaultCategory"], tags=None,
+                            picture=EventParameters.MediaInput(calendarDict["defaultImageID"]))
+            eventsToUpload.append(event)
+            
+
+def _parse_google_location(location:str, defaultLocation: dict):
+    return defaultLocation if location is None else None
     tokens = location.split(",")
     address: EventParameters.Address = None
     match len(tokens):
@@ -132,5 +146,13 @@ def _parse_google_location(location:str):
             address = EventParameters.Address(locality=tokens[1], postalCode=tokens[2], street=tokens[0], country=tokens[3])
         case 5:
             address = EventParameters.Address(locality=tokens[2], postalCode=tokens[3], street=tokens[1], country=tokens[4])
+
+    # Address given is default, so don't need to call Nominatim
+    if ((address.locality, address.street, address.postalCode) == 
+        (defaultLocation["locality"], defaultLocation["street"], defaultLocation["postalCode"])):
+        return EventParameters.Address(defaultLocation)
+    geo_locator = Nominatim(user_agent="Mobilizon Event Bot")
+    geo_code_location = geo_locator.geocode(location)
+    address.geom = f"{geo_code_location.longitude};{geo_code_location.latitude}"
 
     return address

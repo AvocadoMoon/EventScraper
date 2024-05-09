@@ -14,8 +14,6 @@ class EventParameters:
         canceled = "CANCELED"
         tentative = "TENTATIVE"
 
-    class Category(Enum):
-        category = "CATEGORY"
 
     class Visibility(Enum):
         public = "PUBLIC"
@@ -89,8 +87,6 @@ class EventParameters:
         def __init__(self, mediaId:str):
             args = _generate_args(locals())
             super().__init__(**args)
-    
-    
         
 
 
