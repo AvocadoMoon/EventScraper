@@ -8,6 +8,7 @@ from src.drivers.mobilizon.mobilizon_types import EventType, EventParameters
 import os
 import logging
 from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderTimedOut
 from src.logger import logger_name
 
 
@@ -114,7 +115,8 @@ class GCalAPI:
 
 def _process_google_event(googleEvent: dict, eventsToUpload: [], checkCacheForEvent, 
                           calendarId: str, calendarDict: dict):
-    eventAddress = _parse_google_location(googleEvent.get("location"), calendarDict["defaultLocation"])
+    eventAddress = _parse_google_location(googleEvent.get("location"),
+                                          calendarDict.get("defaultLocation"))
     starTimeGoogleEvent = googleEvent["start"].get("dateTime")
     endTimeGooglEvent = googleEvent["end"].get("dateTime")
     title = googleEvent.get("summary")
@@ -124,25 +126,30 @@ def _process_google_event(googleEvent: dict, eventsToUpload: [], checkCacheForEv
     if None not in [starTimeGoogleEvent, endTimeGooglEvent, title, description]:
         startDateTime = datetime.fromisoformat(starTimeGoogleEvent.replace('Z', '+00:00')).astimezone()
         endDateTime = datetime.fromisoformat(endTimeGooglEvent.replace('Z', '+00:00')).astimezone()
+        defaultCategory = None if calendarDict.get("defaultCategory") is None else EventParameters.Categories[calendarDict.get("defaultCategory")]
         if not checkCacheForEvent(startDateTime.isoformat(), title, calendarId):
             event = EventType(attributedToId=calendarDict["groupID"], 
                             title= title, description=f"Automatically scrapped by Event Bot: \n\n{description}",
                             beginsOn=startDateTime.isoformat(),
                             endsOn=endDateTime.isoformat(),
                             onlineAddress=calendarDict["onlineAddress"], physicalAddress=eventAddress,
-                            category=EventParameters.Categories[calendarDict["defaultCategory"]], 
+                            category=defaultCategory, 
                             tags=None,
                             picture=EventParameters.MediaInput(calendarDict["defaultImageID"]))
             eventsToUpload.append(event)
             
 
 def _parse_google_location(location:str, defaultLocation: dict):
-    if location is None:
+    if location is None and defaultLocation is not None:
         logger.debug("No location provided")
         return EventParameters.Address(**defaultLocation)
     tokens = location.split(",")
     address: EventParameters.Address = None
     match len(tokens):
+        case 1:
+            return defaultLocation
+        case 2:
+            return defaultLocation
         case 3:
             address = EventParameters.Address(locality=tokens[0], postalCode=tokens[1], street="", country=tokens[2])
         case 4:
@@ -151,12 +158,19 @@ def _parse_google_location(location:str, defaultLocation: dict):
             address = EventParameters.Address(locality=tokens[2], postalCode=tokens[3], street=tokens[1], country=tokens[4])
 
     # Address given is default, so don't need to call Nominatim
-    if (defaultLocation["locality"] in location and defaultLocation["street"] in location and 
+    if (defaultLocation is not None and defaultLocation["locality"] in location 
+        and defaultLocation["street"] in location and 
         defaultLocation["postalCode"] in location):
         logger.debug("Location included with calendar, but is same as default location.")
         return EventParameters.Address(**defaultLocation)
-    geo_locator = Nominatim(user_agent="Mobilizon Event Bot")
-    geo_code_location = geo_locator.geocode(f"{address.street}, {address.locality}, {address.postalCode}")
-    address.geom = f"{geo_code_location.longitude};{geo_code_location.latitude}"
-    logger.info(f"Outsourced location info. Outsourced location was {address.street}, {address.locality}")
-    return address
+    
+    try:
+        geo_locator = Nominatim(user_agent="Mobilizon Event Bot", timeout=10)
+        geo_code_location = geo_locator.geocode(f"{address.street}, {address.locality}, {address.postalCode}")
+        if geo_code_location is None:
+            return None
+        address.geom = f"{geo_code_location.longitude};{geo_code_location.latitude}"
+        logger.info(f"Outsourced location info. Outsourced location was {address.street}, {address.locality}")
+        return address
+    except GeocoderTimedOut:
+        return None

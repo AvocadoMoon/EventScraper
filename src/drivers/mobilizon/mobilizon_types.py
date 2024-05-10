@@ -72,9 +72,9 @@ class EventParameters:
         street: str # Street
         country: str # 
         type: str = None
-        region: str = "Connecticut"
+        region: str = ""
         timezone: str = "America/New_York"
-        description: str = "Cafe9"
+        description: str = ""
         originId: str = None
         
         def __init__(self, locality:str, postalCode:str, street:str, 
