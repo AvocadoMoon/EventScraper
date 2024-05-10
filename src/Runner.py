@@ -37,8 +37,9 @@ class Runner:
                 lastUploadedEventDate = self.cache_db.getLastEventForCalendarID(google_calendar_id)
             
             events: [EventType] = google_calendar_api.getAllEventsAWeekFromNow(
-                google_calendar_id, google_calendars[key]["groupID"], 
-                google_calendars[key]["defaultImageID"], self.cache_db.entryAlreadyInCache,lastUploadedEventDate)
+                calendarId=google_calendar_id, calendarDict=google_calendars[key], 
+                checkCacheFunction=self.cache_db.entryAlreadyInCache,
+                dateOfLastEventScraped=lastUploadedEventDate)
             if (len(events) == 0):
                 return
             for event in events:

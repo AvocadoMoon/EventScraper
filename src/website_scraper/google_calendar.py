@@ -130,13 +130,16 @@ def _process_google_event(googleEvent: dict, eventsToUpload: [], checkCacheForEv
                             beginsOn=startDateTime.isoformat(),
                             endsOn=endDateTime.isoformat(),
                             onlineAddress=calendarDict["onlineAddress"], physicalAddress=eventAddress,
-                            category=calendarDict["defaultCategory"], tags=None,
+                            category=EventParameters.Categories[calendarDict["defaultCategory"]], 
+                            tags=None,
                             picture=EventParameters.MediaInput(calendarDict["defaultImageID"]))
             eventsToUpload.append(event)
             
 
 def _parse_google_location(location:str, defaultLocation: dict):
-    return defaultLocation if location is None else None
+    if location is None:
+        logger.info("No location provided")
+        return EventParameters.Address(**defaultLocation)
     tokens = location.split(",")
     address: EventParameters.Address = None
     match len(tokens):
@@ -148,11 +151,12 @@ def _parse_google_location(location:str, defaultLocation: dict):
             address = EventParameters.Address(locality=tokens[2], postalCode=tokens[3], street=tokens[1], country=tokens[4])
 
     # Address given is default, so don't need to call Nominatim
-    if ((address.locality, address.street, address.postalCode) == 
-        (defaultLocation["locality"], defaultLocation["street"], defaultLocation["postalCode"])):
-        return EventParameters.Address(defaultLocation)
+    if (defaultLocation["locality"] in location and defaultLocation["street"] in location and 
+        defaultLocation["postalCode"] in location):
+        logger.info("Location included with calendar, but is same as default location.")
+        return EventParameters.Address(**defaultLocation)
     geo_locator = Nominatim(user_agent="Mobilizon Event Bot")
-    geo_code_location = geo_locator.geocode(location)
+    geo_code_location = geo_locator.geocode(f"{address.street}, {address.locality}, {address.postalCode}")
     address.geom = f"{geo_code_location.longitude};{geo_code_location.latitude}"
-
+    logger.info(f"Outsourced location info. Outsourced location was {address.street}, {address.locality}")
     return address

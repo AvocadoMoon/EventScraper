@@ -6,7 +6,7 @@ from datetime import timezone, timedelta, datetime
 import json
 import os
 from geopy.geocoders import Nominatim
-
+import logging
 
 endpoint = "https://ctgrassroots.org/graphiql"
 secrets: dict = None
@@ -43,20 +43,22 @@ def manualTestCreation():
     print("Login and out")
 
 def manualTestGoogleCalendar(printEvents:bool = False):
-    publicCalenderIDs = ["bsbc.co_c4dt5esnmutedv7p3nu01aerhk@group.calendar.google.com",
-                        "ctenvironment@gmail.com"]
     google_calendar_api = GCalAPI()
+    google_calendars: dict = None
+    with open(f"{os.getcwd()}/src/website_scraper/GCal.json", "r") as f:
+        google_calendars = json.load(f)
 
+    bsbco = google_calendars["Bradley Street Bike Co-Op"]
     exampleTimeOffset = datetime.utcnow() + timedelta(days=3)
     exampleTimeOffset = exampleTimeOffset.isoformat() + "Z"
-    allEvents = []
-    for k in publicCalenderIDs:
-        allEvents.append(google_calendar_api.getAllEventsAWeekFromNow(k, 2, "3"))
+    db = SQLiteDB(True)
+    allEvents = google_calendar_api.getAllEventsAWeekFromNow(
+        calendarDict=bsbco, calendarId=bsbco["googleIDs"][0], 
+        checkCacheFunction=db.entryAlreadyInCache)
     
     if(printEvents):
-        for j in allEvents:
-            for event in j:
-                print(f"Start: {event.beginsOn}, End: {event.endsOn}, Title: {event.title}\nDescription: {event.description}, Location: {None if event.physicalAddress is None else event.physicalAddress.locality}")
+        for event in allEvents:
+            print(f"Start: {event.beginsOn}, End: {event.endsOn}, Title: {event.title}\nDescription: {event.description}, Location: {None if event.physicalAddress is None else event.physicalAddress.locality}")
 
     return allEvents
 
@@ -100,12 +102,12 @@ def _getAddressInfo():
 
 
 if __name__ == "__main__":
-    
+    logging.basicConfig(level=logging.ERROR)
     # manualTestCreation()
-    # manualTestGoogleCalendar(True)
+    manualTestGoogleCalendar(False)
     # manualTestCacheDB()
     # getEventBotInfo()
-    _getAddressInfo()
+    # _getAddressInfo()
     
     
     
