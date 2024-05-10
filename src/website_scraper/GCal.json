@@ -13,7 +13,7 @@
             "timezone": "America/New_York",
             "description": "Bradley Street Bike Co-Op"
         },
-        "defaultCategory": "community",
+        "defaultCategory": "outdoors_adventure",
         "onlineAddress": "https://bsbc.co/"
     },
     "Save The Sound":{
@@ -55,7 +55,7 @@
             "timezone": "America/New_York",
             "description": "Healing Meals"
         },
-        "defaultCategory": "community",
+        "defaultCategory": "causes",
         "onlineAddress": "https://healingmealsproject.org/"
     },
     "Downtown New Haven": {
