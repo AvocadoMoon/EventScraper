@@ -4,6 +4,7 @@ import sqlite3
 import os
 import unittest
 import logging
+from src.logger import setup_custom_logger
 
 # TODO: Test the entire runner interaction that it executes
 
@@ -34,5 +35,5 @@ class TestRunner(unittest.TestCase):
         
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.ERROR)
+    setup_custom_logger(logging.INFO)
     unittest.main()

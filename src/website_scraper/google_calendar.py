@@ -8,10 +8,10 @@ from src.drivers.mobilizon.mobilizon_types import EventType, EventParameters
 import os
 import logging
 from geopy.geocoders import Nominatim
+from src.logger import logger_name
 
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger = logging.getLogger(logger_name)
 
 # Subscribe to the calendars
 # https://webapps.stackexchange.com/questions/5217/how-can-i-find-the-subscribe-url-from-the-google-calendar-embed-source-code
@@ -79,7 +79,7 @@ class GCalAPI:
             stringDateLastEvent = datetime.utcnow().astimezone().isoformat()
             if dateOfLastEventScraped is not None: 
                 stringDateLastEvent = dateOfLastEventScraped.isoformat()
-            logger.info(f"Time of last event: {stringDateLastEvent}")
+            logger.debug(f"Time of last event: {stringDateLastEvent}")
             weekFromNow = datetime.utcnow().astimezone() + timedelta(days=7)
             weekFromNow = weekFromNow.isoformat()
             
@@ -138,7 +138,7 @@ def _process_google_event(googleEvent: dict, eventsToUpload: [], checkCacheForEv
 
 def _parse_google_location(location:str, defaultLocation: dict):
     if location is None:
-        logger.info("No location provided")
+        logger.debug("No location provided")
         return EventParameters.Address(**defaultLocation)
     tokens = location.split(",")
     address: EventParameters.Address = None
@@ -153,7 +153,7 @@ def _parse_google_location(location:str, defaultLocation: dict):
     # Address given is default, so don't need to call Nominatim
     if (defaultLocation["locality"] in location and defaultLocation["street"] in location and 
         defaultLocation["postalCode"] in location):
-        logger.info("Location included with calendar, but is same as default location.")
+        logger.debug("Location included with calendar, but is same as default location.")
         return EventParameters.Address(**defaultLocation)
     geo_locator = Nominatim(user_agent="Mobilizon Event Bot")
     geo_code_location = geo_locator.geocode(f"{address.street}, {address.locality}, {address.postalCode}")

@@ -7,7 +7,10 @@ from src.drivers.mobilizon.gql_requests import EventGQL, AuthenticationGQL, Acto
 from src.drivers.mobilizon.mobilizon_types import EventType, Actor
 import requests
 import json
+import logging
+from src.logger import logger_name
 
+logger = logging.getLogger(logger_name)
 
 
 class retry_if_not_exception_type(retry_if_exception):
@@ -91,6 +94,7 @@ class MobilizonAPI:
     def __init__(self, endpoint: str, email: str, password: str):
         self._mobilizon_client = _MobilizonClient(endpoint, f'"{email}"', f'"{password}"')
         self.bot_actor = Actor(**self.getActors()["identities"][0])
+        logger.info("Logged In")
     # events
         
     
@@ -118,6 +122,7 @@ class MobilizonAPI:
 
     def logout(self):
         self._mobilizon_client.logOut()
+        logger.info("Logged Out")
     
     def getActors(self):
         return self._mobilizon_client.publish(ActorsGQL.getIdentities())

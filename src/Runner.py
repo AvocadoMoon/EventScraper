@@ -5,9 +5,9 @@ from src.website_scraper.google_calendar import GCalAPI
 import json
 import os
 import logging
+from src.logger import logger_name, setup_custom_logger
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger = logging.getLogger(logger_name)
 
 
 class Runner:
@@ -50,8 +50,7 @@ class Runner:
                     uploadResponse = {"id": 1, "uuid": self.fakeUUIDForTests}
                 else:
                     uploadResponse = self.mobilizonAPI.bot_created_event(event)
-                print(uploadResponse)
-            
+                logger.info(f"{uploadResponse}")            
                 self.cache_db.insertUploadedEvent(UploadedEventRow(uuid=uploadResponse["uuid"],
                                                     id=uploadResponse["id"],
                                                     title=event.title,
@@ -79,7 +78,7 @@ class Runner:
     
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.ERROR)
+    setup_custom_logger(logging.INFO)
     runner = Runner()
     runner.getGCalEventsAndUploadThem()
     runner.cleanUp()

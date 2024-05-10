@@ -7,6 +7,7 @@ import json
 import os
 from geopy.geocoders import Nominatim
 import logging
+from src.logger import setup_custom_logger
 
 endpoint = "https://ctgrassroots.org/graphiql"
 secrets: dict = None
@@ -102,10 +103,10 @@ def _getAddressInfo():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.ERROR)
+    setup_custom_logger(logging.DEBUG)
     # manualTestCreation()
-    manualTestGoogleCalendar(False)
-    # manualTestCacheDB()
+    # manualTestGoogleCalendar(False)
+    manualTestCacheDB()
     # getEventBotInfo()
     # _getAddressInfo()
     

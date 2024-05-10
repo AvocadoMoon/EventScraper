@@ -1,9 +1,9 @@
 import sqlite3
 from datetime import datetime
 import logging
+from src.logger import logger_name
 
-logger = logging.getLogger(__name__)
-# logger.setLevel(logging.DEBUG)
+logger = logging.getLogger(logger_name)
 
 class UploadedEventRow:
     uuid: str
