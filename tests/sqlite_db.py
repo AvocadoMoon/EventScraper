@@ -1,4 +1,4 @@
-from src.drivers.mobilizon.db_cache import SQLiteDB, UploadedEventRow
+from src.db_cache import SQLiteDB, UploadedEventRow
 import sqlite3
 import os
 import unittest

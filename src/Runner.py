@@ -1,6 +1,6 @@
-from src.drivers.mobilizon.db_cache import SQLiteDB, UploadedEventRow
-from src.drivers.mobilizon.mobilizon import MobilizonAPI
-from src.drivers.mobilizon.mobilizon_types import EventType
+from src.db_cache import SQLiteDB, UploadedEventRow
+from src.mobilizon.mobilizon import MobilizonAPI
+from src.mobilizon.mobilizon_types import EventType
 from src.website_scraper.google_calendar import GCalAPI
 import json
 import os
