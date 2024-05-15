@@ -15,6 +15,7 @@ class Runner:
     cache_db: SQLiteDB
     testMode: bool
     fakeUUIDForTests = 0
+    google_calendar_api: GCalAPI
     
     def __init__(self, testMode:bool = False):
         secrets = None
@@ -28,38 +29,38 @@ class Runner:
         else:
             self.cache_db = SQLiteDB()
         self.testMode = testMode
+        self.google_calendar_api = GCalAPI()
 
+
+    def _uploadEventsRetrievedFromCalendarID(self, google_calendar_id, google_calendars, google_calendar_name):
+        lastUploadedEventDate = None
+        if not self.cache_db.noEntriesWithCalendarID(google_calendar_id):
+            lastUploadedEventDate = self.cache_db.getLastEventForCalendarID(google_calendar_id)
+        
+        events: [EventType] = self.google_calendar_api.getAllEventsAWeekFromNow(
+            calendarId=google_calendar_id, calendarDict=google_calendars[google_calendar_name], 
+            checkCacheFunction=self.cache_db.entryAlreadyInCache,
+            dateOfLastEventScraped=lastUploadedEventDate)
+        if (len(events) == 0):
+            return
+        for event in events:
+            event: EventType
+            uploadResponse: dict = None
+            if self.testMode:
+                self.fakeUUIDForTests += 1
+                uploadResponse = {"id": 1, "uuid": self.fakeUUIDForTests}
+            else:
+                uploadResponse = self.mobilizonAPI.bot_created_event(event)
+            logger.info(f"{uploadResponse}")            
+            self.cache_db.insertUploadedEvent(UploadedEventRow(uuid=uploadResponse["uuid"],
+                                                id=uploadResponse["id"],
+                                                title=event.title,
+                                                date=event.beginsOn,
+                                                groupID=event.attributedToId,
+                                                groupName=google_calendar_name,
+                                                calendar_id=google_calendar_id))
 
     def getGCalEventsAndUploadThem(self):
-        def uploadEventsRetrievedFromCalendarID():
-            lastUploadedEventDate = None
-            if not self.cache_db.noEntriesWithCalendarID(google_calendar_id):
-                lastUploadedEventDate = self.cache_db.getLastEventForCalendarID(google_calendar_id)
-            
-            events: [EventType] = google_calendar_api.getAllEventsAWeekFromNow(
-                calendarId=google_calendar_id, calendarDict=google_calendars[key], 
-                checkCacheFunction=self.cache_db.entryAlreadyInCache,
-                dateOfLastEventScraped=lastUploadedEventDate)
-            if (len(events) == 0):
-                return
-            for event in events:
-                event: EventType
-                uploadResponse: dict = None
-                if self.testMode:
-                    self.fakeUUIDForTests += 1
-                    uploadResponse = {"id": 1, "uuid": self.fakeUUIDForTests}
-                else:
-                    uploadResponse = self.mobilizonAPI.bot_created_event(event)
-                logger.info(f"{uploadResponse}")            
-                self.cache_db.insertUploadedEvent(UploadedEventRow(uuid=uploadResponse["uuid"],
-                                                    id=uploadResponse["id"],
-                                                    title=event.title,
-                                                    date=event.beginsOn,
-                                                    groupID=event.attributedToId,
-                                                    groupName=key,
-                                                    calendar_id=google_calendar_id))
-
-        google_calendar_api = GCalAPI()
         google_calendars: dict = None
         with open(f"{os.getcwd()}/src/website_scraper/GCal.json", "r") as f:
             google_calendars = json.load(f)
@@ -67,14 +68,22 @@ class Runner:
         for key, value in google_calendars.items():
             logger.info(f"Getting events from calendar {key}")
             for google_calendar_id in google_calendars[key]["googleIDs"]:
-                uploadEventsRetrievedFromCalendarID()
+                self._uploadEventsRetrievedFromCalendarID(google_calendar_id, google_calendars, key)
+    
+    def getGCalEventsForSpecificGroupAndUploadThem(self, calendarGroup: str):
+        google_calendars: dict = None
+        with open(f"{os.getcwd()}/src/website_scraper/GCal.json", "r") as f:
+            google_calendars = json.load(f)
         
-        google_calendar_api.close()
-        
+        logger.info(f"Getting events from calendar {calendarGroup}")
+        for google_calendar_id in google_calendars[calendarGroup]["googleIDs"]:
+            self._uploadEventsRetrievedFromCalendarID(google_calendar_id, google_calendars, calendarGroup)
+             
     
     def cleanUp(self):
         self.mobilizonAPI.logout()
         self.cache_db.close()
+        self.google_calendar_api.close()
     
 
 if __name__ == "__main__":
