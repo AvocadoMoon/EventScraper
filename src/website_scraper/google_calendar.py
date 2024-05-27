@@ -143,6 +143,8 @@ def _parse_google_location(location:str, defaultLocation: dict):
     if location is None and defaultLocation is not None:
         logger.debug("No location provided")
         return EventParameters.Address(**defaultLocation)
+    if location is None:
+        return None
     tokens = location.split(",")
     address: EventParameters.Address = None
     match len(tokens):
