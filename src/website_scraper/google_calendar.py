@@ -158,6 +158,8 @@ def _parse_google_location(location:str, defaultLocation: dict):
             address = EventParameters.Address(locality=tokens[1], postalCode=tokens[2], street=tokens[0], country=tokens[3])
         case 5:
             address = EventParameters.Address(locality=tokens[2], postalCode=tokens[3], street=tokens[1], country=tokens[4])
+        case _:
+            return None
 
     # Address given is default, so don't need to call Nominatim
     if (defaultLocation is not None and defaultLocation["locality"] in location 
