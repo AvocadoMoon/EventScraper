@@ -1,6 +1,6 @@
 from src.mobilizon.mobilizon import MobilizonAPI
 from src.mobilizon.mobilizon_types import EventParameters, EventType
-from src.db_cache import UploadedEventRow, SQLiteDB
+from src.db_cache import UploadedEventRow, SQLiteDB, UploadSource, SourceTypes
 from src.website_scraper.google_calendar import GCalAPI
 from datetime import timezone, timedelta, datetime
 import json
@@ -66,15 +66,20 @@ def manualTestGoogleCalendar(printEvents:bool = False):
 
 def manualTestCacheDB():
     allEvents: [UploadedEventRow] = [
-        UploadedEventRow("uuid1", "id1", "title1", "2022-05-05T16:00:00-04:00", "2", "group2", "123"),
-        UploadedEventRow("uuid5", "id1", "title1", "2022-05-05T10:00:00-04:00", "2", "group2", "123"),
-        UploadedEventRow("uuid3", "id1", "title1", "2022-05-04T10:00:00-04:00", "2", "group2", "123")
+        UploadedEventRow("uuid1", "id1", "title1", "2022-05-05T16:00:00-04:00", "2", "group2"),
+        UploadedEventRow("uuid5", "id1", "title1", "2022-05-05T10:00:00-04:00", "2", "group2"),
+        UploadedEventRow("uuid3", "id1", "title1", "2022-05-04T10:00:00-04:00", "2", "group2")
+    ]
+    eventSources: [UploadSource] = [
+        UploadSource("uuid1", "website", "123", SourceTypes.gCal),
+        UploadSource("uuid5", "website", "123", SourceTypes.gCal),
+        UploadSource("uuid3", "website", "123", SourceTypes.gCal)
     ]
     db = SQLiteDB(True)
-    for k in allEvents:
-        db.insertUploadedEvent(k)
+    for k in range(len(allEvents)):
+        db.insertUploadedEvent(allEvents[k], eventSources[k])
     # print(db.selectAllFromTable().fetchall())
-    print(db.getLastEventForCalendarID("123").isoformat())
+    print(db.getLastEventDateForSourceID("123").isoformat())
     db.close()
 
 def getEventBotInfo():
