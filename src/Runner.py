@@ -39,7 +39,7 @@ class Runner:
             lastUploadedEventDate = self.cache_db.getLastEventDateForSourceID(google_calendar_id)
         
         events: [EventType] = self.google_calendar_api.getAllEventsAWeekFromNow(
-            calendarId=google_calendar_id, eventKernel=eventKernel, 
+            calendarId=google_calendar_id, eventKernel=eventKernel.event, 
             checkCacheFunction=self.cache_db.entryAlreadyInCache,
             dateOfLastEventScraped=lastUploadedEventDate)
         if (len(events) == 0):
@@ -58,28 +58,29 @@ class Runner:
                                                 title=event.title,
                                                 date=event.beginsOn,
                                                 groupID=event.attributedToId,
-                                                groupName=eventKernel.eventKernelKey,
-                                                calendar_id=google_calendar_id),
+                                                groupName=eventKernel.eventKernelKey),
                                               UploadSource(uuid=uploadResponse["uuid"],
                                                            websiteURL=event.onlineAddress,
                                                            source=google_calendar_id,
                                                            sourceType=SourceTypes.gCal))
 
     def getGCalEventsAndUploadThem(self):
-        google_calendars: [EventKernel] = getEventObjects(f"{os.getcwd()}/src/web_scraper/GCal.json")
+        google_calendars: [EventKernel] = getEventObjects(f"{os.getcwd()}/src/website_scraper/GCal.json")
 
         eventKernel: EventKernel
         for eventKernel in google_calendars:
             logger.info(f"Getting events from calendar {eventKernel.eventKernelKey}")
             for google_calendar_id in eventKernel.sourceIDs:
-                self._uploadEventsRetrievedFromCalendarID(google_calendar_id, google_calendars)
+                self._uploadEventsRetrievedFromCalendarID(google_calendar_id, eventKernel)
     
     def getGCalEventsForSpecificGroupAndUploadThem(self, calendarGroup: str):
-        google_calendars: dict = getEventObjects(f"{os.getcwd()}/src/web_scraper/GCal.json")
+        google_calendars: [EventKernel] = getEventObjects(f"{os.getcwd()}/src/website_scraper/GCal.json")
         logger.info(f"Getting events from calendar {calendarGroup}")
         gCal: EventKernel
         for gCal in google_calendars:
-            self._uploadEventsRetrievedFromCalendarID(gCal.event, gCal.sourceIDs, calendarGroup)
+            if gCal.eventKernelKey == calendarGroup:
+                for googleCalendarID in gCal.sourceIDs:
+                    self._uploadEventsRetrievedFromCalendarID(googleCalendarID, gCal)
     
     def getFarmerMarketsAndUploadThem(self):
         pass 

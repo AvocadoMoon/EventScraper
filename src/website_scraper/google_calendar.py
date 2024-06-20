@@ -10,6 +10,7 @@ import logging
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut
 from src.logger import logger_name
+import copy
 
 
 logger = logging.getLogger(logger_name)
@@ -99,7 +100,7 @@ class GCalAPI:
             for googleEvent in googleEvents:
                 _process_google_event(googleEvent=googleEvent, eventsToUpload=events,
                                     checkCacheForEvent=checkCacheFunction,calendarId=calendarId,
-                                    eventKernel=eventKernel)
+                                    eventKernel=copy.deepcopy(eventKernel))
             
             return events
         except HttpError as error:
@@ -114,8 +115,7 @@ class GCalAPI:
 
 def _process_google_event(googleEvent: dict, eventsToUpload: [], checkCacheForEvent, 
                           calendarId: str, eventKernel):
-    eventAddress = _parse_google_location(googleEvent.get("location"),
-                                          eventKernel.physicalAddress)
+    
     starTimeGoogleEvent = googleEvent["start"].get("dateTime")
     endTimeGooglEvent = googleEvent["end"].get("dateTime")
     title = googleEvent.get("summary")
@@ -126,11 +126,12 @@ def _process_google_event(googleEvent: dict, eventsToUpload: [], checkCacheForEv
         startDateTime = datetime.fromisoformat(starTimeGoogleEvent.replace('Z', '+00:00')).astimezone()
         endDateTime = datetime.fromisoformat(endTimeGooglEvent.replace('Z', '+00:00')).astimezone()
         if not checkCacheForEvent(startDateTime.isoformat(), title, calendarId):
+            eventAddress = _parse_google_location(googleEvent.get("location"), eventKernel.physicalAddress)
             eventKernel.beginsOn = startDateTime.isoformat()
             eventKernel.endsOn = endDateTime.isoformat()
             eventKernel.physicalAddress = eventAddress
             eventKernel.title = title
-            eventKernel = f"Automatically scraped by Event Bot: \n\n{description}"
+            eventKernel.description = f"Automatically scraped by Event Bot: \n\n{description}"
             eventsToUpload.append(eventKernel)
             
 

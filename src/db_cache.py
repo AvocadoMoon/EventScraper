@@ -115,7 +115,8 @@ class SQLiteDB:
                                 INNER JOIN {self.event_source_table_name} ON 
                                 {self.uploaded_events_table_name}.uuid={self.event_source_table_name}.uuid
                                 WHERE date = ? AND title = ? AND source = ?""", (date, title, sourceID))
-        if(len(res.fetchall()) > 0):
+        query = res.fetchall()
+        if(len(query) > 0):
             return True
         return False
 

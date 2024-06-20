@@ -10,11 +10,11 @@ logger = logging.getLogger(logger_name)
 class EventKernel:
     event: EventType
     eventKey: str
-    sourceIDs: [str] = None
+    sourceIDs: [str]
     
-    def __init__(self, event, eventKey, googleIDs=None):
+    def __init__(self, event, eventKey, sourceIDs):
         self.event = event
-        self.googleIDs = googleIDs
+        self.sourceIDs = sourceIDs
         self.eventKernelKey = eventKey
 
 
@@ -28,18 +28,19 @@ def getEventObjects(jsonPath: str) -> [EventKernel]:
     eventKernels: [EventKernel] = []
     for key, event in eventSchema.items():
         def noneIfNotPresent(x):
-            return None if x not in eventSchema else event[x]
+            return None if x not in event else event[x]
         
         
         eventAddress = None if "defaultLocation" not in eventSchema else EventParameters.Address(**event["defaultLocation"])
+        category = None if "defaultCategory" not in eventSchema else EventParameters.Categories[event["defaultCategory"]]
         eventKernel = EventType(event["groupID"], noneIfNotPresent("title"), 
                             noneIfNotPresent("defaultDescription"), noneIfNotPresent("beginsOn"),
                             event["onlineAddress"], noneIfNotPresent("endsOn"), 
-                            eventAddress, event["defaultCategory"], 
-                            noneIfNotPresent("defaultTags"), event["defaultImageID"])
-    
+                            eventAddress, category, 
+                            noneIfNotPresent("defaultTags"), EventParameters.MediaInput(event["defaultImageID"]))
+
         googleIDs = noneIfNotPresent("googleIDs")
-        eventKernels.append(EventKernel(eventKernel, key, googleIDs))
+        eventKernels.append(EventKernel(eventKernel, key, sourceIDs=googleIDs))
     
     return eventKernels
     
