@@ -1,7 +1,7 @@
 from src.db_cache import SQLiteDB, UploadedEventRow, UploadSource, SourceTypes
 from src.mobilizon.mobilizon import MobilizonAPI
 from src.mobilizon.mobilizon_types import EventType
-from src.website_scraper.google_calendar import GCalAPI
+from src.scrapers.google_calendar import GCalAPI
 import json
 import os
 import logging
@@ -65,7 +65,7 @@ class Runner:
                                                            sourceType=SourceTypes.gCal))
 
     def getGCalEventsAndUploadThem(self):
-        google_calendars: [EventKernel] = getEventObjects(f"{os.getcwd()}/src/website_scraper/GCal.json")
+        google_calendars: [EventKernel] = getEventObjects(f"{os.getcwd()}/src/scrapers/GCal.json")
 
         eventKernel: EventKernel
         for eventKernel in google_calendars:
@@ -74,7 +74,7 @@ class Runner:
                 self._uploadEventsRetrievedFromCalendarID(google_calendar_id, eventKernel)
     
     def getGCalEventsForSpecificGroupAndUploadThem(self, calendarGroup: str):
-        google_calendars: [EventKernel] = getEventObjects(f"{os.getcwd()}/src/website_scraper/GCal.json")
+        google_calendars: [EventKernel] = getEventObjects(f"{os.getcwd()}/src/scrapers/GCal.json")
         logger.info(f"Getting events from calendar {calendarGroup}")
         gCal: EventKernel
         for gCal in google_calendars:

@@ -1,7 +1,7 @@
 from src.mobilizon.mobilizon import MobilizonAPI
 from src.mobilizon.mobilizon_types import EventParameters, EventType
 from src.db_cache import UploadedEventRow, SQLiteDB, UploadSource, SourceTypes
-from src.website_scraper.google_calendar import GCalAPI
+from src.scrapers.google_calendar import GCalAPI
 from datetime import timezone, timedelta, datetime
 import json
 import os
@@ -46,7 +46,7 @@ def manualTestCreation():
 def manualTestGoogleCalendar(printEvents:bool = False):
     google_calendar_api = GCalAPI()
     google_calendars: dict = None
-    with open(f"{os.getcwd()}/src/website_scraper/GCal.json", "r") as f:
+    with open(f"{os.getcwd()}/src/scrapers/GCal.json", "r") as f:
         google_calendars = json.load(f)
 
     bsbco = google_calendars["Bradley Street Bike Co-Op"]

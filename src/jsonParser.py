@@ -39,8 +39,8 @@ def getEventObjects(jsonPath: str) -> [EventKernel]:
                             eventAddress, category, 
                             noneIfNotPresent("defaultTags"), EventParameters.MediaInput(event["defaultImageID"]))
 
-        googleIDs = noneIfNotPresent("googleIDs")
-        eventKernels.append(EventKernel(eventKernel, key, sourceIDs=googleIDs))
+        sourceIDs = noneIfNotPresent("sourceIDs")
+        eventKernels.append(EventKernel(eventKernel, key, sourceIDs=sourceIDs))
     
     return eventKernels
     
