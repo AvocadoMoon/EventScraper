@@ -1,7 +1,7 @@
 from src.db_cache import SQLiteDB, UploadedEventRow, UploadSource, SourceTypes
 from src.mobilizon.mobilizon import MobilizonAPI
 from src.mobilizon.mobilizon_types import EventType
-from src.scrapers.google_calendar import GCalAPI
+from src.scrapers.google_calendar.api import GCalAPI
 import json
 import os
 import logging
