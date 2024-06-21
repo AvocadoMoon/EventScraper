@@ -1,23 +1,24 @@
 {
-    "Bradley Street Bike Co-Op":{
-        "googleIDs": ["bsbc.co_c4dt5esnmutedv7p3nu01aerhk@group.calendar.google.com"],
-        "groupID": 15,
-        "defaultImageID": "86",
+
+    "New Haven Library": {
+        "sourceIDs": ["8qf27rmmeun7mat412odluuha11umbhm@import.calendar.google.com"],
+        "groupID": 22,
+        "defaultImageID": "93",
         "defaultLocation": {
-            "geom": "-72.91659780190719;41.311977689389536",
+            "geom": "-72.9242791637932;41.30925775517219",
             "locality": "New Haven",
-            "postalCode": "06511",
-            "street": "138 Bradley St",
+            "postalCode": "06510",
+            "street": "133 Elm St",
             "country": "United States",
             "region": "Connecticut",
             "timezone": "America/New_York",
-            "description": "Bradley Street Bike Co-Op"
+            "description": "New Haven Free Public Library"
         },
-        "defaultCategory": "outdoors_adventure",
-        "onlineAddress": "https://bsbc.co/"
+        "defaultCategory": "family_education",
+        "onlineAddress": "https://nhfpl.org/"
     },
     "Save The Sound":{
-        "googleIDs": ["ctenvironment@gmail.com"],
+        "sourceIDs": ["ctenvironment@gmail.com"],
         "groupID": 16,
         "defaultImageID": "87",
         "defaultCategory": "causes",
@@ -25,7 +26,7 @@
         "defaultTags": []
     },
     "Hartford Jazz Society": {
-        "googleIDs" : ["1323fv30pk4la63e4je86sook47avts9@import.calendar.google.com"],
+        "sourceIDs" : ["1323fv30pk4la63e4je86sook47avts9@import.calendar.google.com"],
         "groupID": 17,
         "defaultImageID": "88",
         "defaultLocation": {
@@ -42,7 +43,7 @@
         "onlineAddress": "https://hartfordjazzsociety.com/"
     },
     "Healing Meals" : {
-        "googleIDs" : ["6lrbqnpdr3unfvr8oolv089hqu37nal6@import.calendar.google.com"],
+        "sourceIDs" : ["6lrbqnpdr3unfvr8oolv089hqu37nal6@import.calendar.google.com"],
         "groupID": 18,
         "defaultImageID": "89",
         "defaultLocation": {
@@ -59,13 +60,13 @@
         "onlineAddress": "https://healingmealsproject.org/"
     },
     "Downtown New Haven": {
-        "googleIDs": ["3sb3oi1p84kjscr1lrpa15paavbhtrol@import.calendar.google.com"],
+        "sourceIDs": ["3sb3oi1p84kjscr1lrpa15paavbhtrol@import.calendar.google.com"],
         "groupID": 19,
         "defaultImageID": "90",
         "onlineAddress": "https://www.infonewhaven.com/"
     },
     "The Institute Library": {
-        "googleIDs": ["ke5stbpohu2nb4qh3f1r9vgci4nv5knb@import.calendar.google.com"],
+        "sourceIDs": ["ke5stbpohu2nb4qh3f1r9vgci4nv5knb@import.calendar.google.com"],
         "groupID": 20,
         "defaultImageID": "91",
         "defaultLocation": {
@@ -81,7 +82,7 @@
         "onlineAddress": "https://institutelibrary.org/"
     },
     "Elm City Games": {
-        "googleIDs": ["c_2fc67df8dc1e133f005ee39ac99fe484229ebd6d96a0e0f53fb322c2609e6b0e@group.calendar.google.com",
+        "sourceIDs": ["c_2fc67df8dc1e133f005ee39ac99fe484229ebd6d96a0e0f53fb322c2609e6b0e@group.calendar.google.com",
     "c_c38a717324dce0a08588eef4ac9b6c30a2151a0adbd4be141f9e84f2b6700516@group.calendar.google.com",
     "c_36efc12fbcb34811701017a04f6106b018fa9de305cac8d2877e22e3138a7dc8@group.calendar.google.com",
     "c_fe0f40abce0f4fa9b355dd8841fa0005d026bd35d1152496e5677011d7dee699@group.calendar.google.com",
@@ -102,42 +103,25 @@
         "defaultCategory": "games",
         "onlineAddress": "https://www.elmcitygames.com/"
     },
-    "New Haven Library": {
-        "googleIDs": ["8qf27rmmeun7mat412odluuha11umbhm@import.calendar.google.com"],
-        "groupID": 22,
-        "defaultImageID": "93",
+    "Bradley Street Bike Co-Op":{
+        "sourceIDs": ["bsbc.co_c4dt5esnmutedv7p3nu01aerhk@group.calendar.google.com"],
+        "groupID": 15,
+        "defaultImageID": "86",
         "defaultLocation": {
-            "geom": "-72.9242791637932;41.30925775517219",
+            "geom": "-72.91659780190719;41.311977689389536",
             "locality": "New Haven",
-            "postalCode": "06510",
-            "street": "133 Elm St",
+            "postalCode": "06511",
+            "street": "138 Bradley St",
             "country": "United States",
             "region": "Connecticut",
             "timezone": "America/New_York",
-            "description": "New Haven Free Public Library"
+            "description": "Bradley Street Bike Co-Op"
         },
-        "defaultCategory": "family_education",
-        "onlineAddress": "https://nhfpl.org/"
-    },
-    "Hartford Library": {
-        "googleIDs": ["u4am2mlf0vr9mh75ejsv3mqgn9rrm7av@import.calendar.google.com"],
-        "groupID": 23,
-        "defaultImageID": "94",
-        "defaultLocation": {
-            "geom": "-72.6729292938105;41.76218095422079",
-            "locality": "Hartford",
-            "postalCode": "06103",
-            "street": "500 Main St",
-            "country": "United States",
-            "region": "Connecticut",
-            "timezone": "America/New_York",
-            "description": "Hartford Public Library"
-        },
-        "defaultCategory": "family_education",
-        "onlineAddress": "https://www.hplct.org/"
+        "defaultCategory": "outdoors_adventure",
+        "onlineAddress": "https://bsbc.co/"
     },
     "WBT": {
-        "googleIDs": ["wbtblackbox@gmail.com"],
+        "sourceIDs": ["wbtblackbox@gmail.com"],
         "groupID": 24,
         "defaultImageID": "95",
         "defaultLocation": {
