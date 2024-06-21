@@ -1,0 +1,149 @@
+{
+    "Stonington": {
+        "groupID": 25,
+        "defaultImageID": "96",
+        "defaultLocation": {
+            "geom": "-71.90182249966294;41.3420500959362",
+            "locality": "Stonington",
+            "postalCode": "06378",
+            "street": "22 Bayview Ave",
+            "country": "United States",
+            "timezone": "America/New_York",
+            "region": "Connecticut",
+            "description": "The Velvet Mill"
+        },
+        "defaultCategory": "food_drink",
+        "onlineAddress": "https://www.sviastonington.org/farmers-market",
+        "defaultTags": ["Farmer Market"],
+        "defaultDescription": "The Stonington Farmers Market began in 1997 under the initiative of Geoffrey Little. The enormously popular market attracts residents from the Borough and surrounding communities who come to buy fresh, healthy, local food. In 2008, the Stonington Farmers Market became a year-round event on Saturdays, moving inside during the winter months.\n\n \n\nItems sold at the market include locally grown vegetables and fruits, jams, a variety of breads, pies and baked goods, cheese, eggs, poultry, meat, seafood, Italian ices, maple syrup, honey, and flowers. Thanks to greenhouses, our farmers are able to offer a selection of fresh produce throughout the winter. Our market offers whatever our farmers are harvesting each week as well as prepared foods such as salsa, soups, meat pies, hummus, breakfast sandwiches, and baked goods.\n\n\nIn addition to great food, different craft vendors are featured each week at the market. Among the hand-made items you will find are beautiful candles, pottery, jewelry, wooden bowls, cutting boards, soaps, gorgeous note cards, and table linens.",
+        "defaultTimes": [["2024-06-15T09:00:00-04:00", "2024-06-15T12:00:00-04:00"]],
+        "startDate": "2024-05-27T00:00:00-04:00",
+        "endDate": "2024-10-12T00:00:00-04:00"
+    },
+    "Naugatuck": {
+        "groupID": 25,
+        "defaultImageID": "97",
+        "defaultLocation": {
+            "geom": "-73.05572286634849;41.49080758327309",
+            "locality": "Naugatuck",
+            "postalCode": "06770",
+            "street": "21 Maple St",
+            "country": "United States",
+            "region": "Connecticut",
+            "timezone": "America/New_York",
+            "description": "Town Green"
+        },
+        "defaultCategory": "food_drink",
+        "onlineAddress": "https://guide.ctnofa.org/g/naugatuck-ct/n/902/naugatuck-farmers-market",
+        "defaultTags": ["Farmer Market"],
+        "defaultDescription": "",
+        "defaultTimes": [["2024-06-09T09:00:00-04:00", "2024-06-09T13:00:00-04:00"]],
+        "startDate": "2024-06-23T00:00:00-04:00",
+        "endDate": "2024-10-27T00:00:00-04:00"
+    },
+    "Stamford": {
+        "groupID": 25,
+        "defaultImageID": "98",
+        "defaultLocation": {
+            "geom": "-73.52903985602237;41.05457207106413",
+            "locality": "Stamford",
+            "postalCode": "06901",
+            "street": "130 Atlantic St",
+            "country": "United States",
+            "region": "Connecticut",
+            "timezone": "America/New_York",
+            "description": "Stamford Downtown Farmers Market"
+        },
+        "defaultCategory": "food_drink",
+        "onlineAddress": "http://stamford-downtown.com/events/farmers-market/",
+        "defaultTags": ["Farmer Market"],
+        "defaultDescription": "Shop our weekly farmers market offering a wide variety of locally grown fruits, vegetables and flowers.  You'll also find breads, jams, baked goods, cheeses, oils and more!  Straight from the farm to your home! We accept WIC & SNAP.",
+        "defaultTimes": [["2024-06-15T09:00:00-04:00", "2024-06-15T14:00:00-04:00"]],
+        "startDate": "2024-06-15T00:00:00-04:00",
+        "endDate": "2024-10-26T00:00:00-04:00"
+    },
+    "East side Bridgeport": {
+        "groupID": 25,
+        "defaultImageID": "99",
+        "defaultLocation": {
+            "geom": "-73.17905101778737;41.18531124358109",
+            "locality": "Bridgeport",
+            "postalCode": "06608",
+            "street": "752 East Main St",
+            "country": "United States",
+            "region": "Connecticut",
+            "timezone": "America/New_York",
+            "description": "East Side Farmers Market"
+        },
+        "defaultCategory": "food_drink",
+        "onlineAddress": "https://www.bridgeportct.gov/government/departments/health-social-services/events-and-programs/east-side-farmers-market",
+        "defaultTags": ["Farmer Market"],
+        "defaultDescription": "The East Side Farmers Market was launched by the Bridgeport Health Department to increase access to healthy foods in the East Side. For more than 13 years, this market has provided fresh fruits and vegetables to Bridgeport and East Side residents. Every Wednesday during the summer, residents can come to the market to shop for fresh local produce.",
+        "defaultTimes": [["2024-06-12T10:00:00-04:00", "2024-06-12T14:00:00-04:00"]],
+        "startDate": "2024-07-17T00:00:00-04:00",
+        "endDate": "2024-10-16T00:00:00-04:00"
+    },
+    "West Hartford": {
+        "groupID": 25,
+        "defaultImageID": "100",
+        "defaultLocation": {
+            "geom": "-72.74495383344147;41.75973925487368",
+            "locality": "West Hartford",
+            "postalCode": "06107",
+            "street": "9 Arapahoe Rd",
+            "country": "United States",
+            "region": "Connecticut",
+            "timezone": "America/New_York",
+            "description": "West Hartford Farmers Market"
+        },
+        "defaultCategory": "food_drink",
+        "onlineAddress": "https://www.westhartfordct.gov/visit-us/gardens-farms",
+        "defaultTags": ["Farmer Market"],
+        "defaultDescription": "West Hartford Farmers' Market is open from May through December in the municipal parking lot located at the corner of Arapahoe Road and LaSalle Road. The market, now in its 35th year, features fruits, vegetables, maple syrup, flowers, cheese, jam, and bread from Connecticut farms. Thank you for buying locally and supporting the Connecticut economy.",
+        "defaultTimes": [["2024-06-15T09:00:00-04:00", "2024-06-15T13:00:00-04:00"]],
+        "startDate": "2024-06-01T00:00:00-04:00",
+        "endDate": "2024-12-21T00:00:00-05:00"
+    },
+    "Willimantic": {
+        "groupID": 25,
+        "defaultImageID": "101",
+        "defaultLocation": {
+            "geom": "-71.90182249966294;41.3420500959362",
+            "locality": "Willimantic",
+            "postalCode": "06226",
+            "street": "28 Bridge St",
+            "country": "United States",
+            "region": "Connecticut",
+            "timezone": "America/New_York",
+            "description": "Willimantic Farmers Market"
+        },
+        "defaultCategory": "food_drink",
+        "onlineAddress": "http://www.willimanticfarmersmarket.org/",
+        "defaultTags": ["Farmer Market"],
+        "defaultDescription": "The Willimantic Farmers' market is the oldest in the state of Connecticut.  It officially opened in 1976 on a budget of $1,500 in a Pop-up Tent on a Town-owned parcel of land under the auspices of a Community non-profit agency, the Windham Regional Community Council, with co-sponsorship of the Town of Windham and the Windham Chamber of Commerce. Staffing consisted of a dedicated Food and Nutrition Coordinator and a team of VISTA Volunteers afforded to the Project by the University of Connecticut's Agricultural Department. The Market opened with some fifteen vendors selling produce, baked goods and craft items. All vendors had been vetted by farm and site visits to certify that all items sold were originally produced by the respective vendors, that their farm or place of business was local, and that they were in compliance with all applicable regulations of the State and local Department of Public Health, the State's Department of Agriculture, and other regulatory bodies. Federal Food Stamp certification was also obtained.",
+        "defaultTimes": [["2024-06-15T08:00:00-04:00", "2024-06-15T12:00:00-04:00"]],
+        "startDate": "2024-05-11T00:00:00-04:00",
+        "endDate": "2024-10-26T00:00:00-04:00"
+    },
+    "Woster Square New Haven": {
+        "groupID": 25,
+        "defaultImageID": "103",
+        "defaultLocation": {
+            "geom": "-72.91410063993968;41.30413896209955",
+            "locality": "New Haven",
+            "postalCode": "06511",
+            "street": "511 Chapel Street",
+            "country": "United States",
+            "region": "Connecticut",
+            "timezone": "America/New_York",
+            "description": "CitySeed Woster Square Farmers' Market"
+        },
+        "defaultCategory": "food_drink",
+        "onlineAddress": "https://cityseed.org/",
+        "defaultTags": ["Farmer Market"],
+        "defaultDescription": "CitySeed's mission is to engage the community in growing an equitable, local food system that promotes economic development, community development and sustainable agriculture. The Farmers Markets are producer-only markets, which means all of the produce a farmer sells under their tent was grown on their farm.",
+        "defaultTimes": [["2024-06-15T09:00:00-04:00", "2024-06-15T13:30:00-04:00"]],
+        "startDate": "2024-04-06T00:00:00-04:00",
+        "endDate": "2024-12-21T00:00:00-05:00"
+    }
+}

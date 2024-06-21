@@ -1,7 +1,9 @@
 import json
 import logging
-from src.logger import logger_name, setup_custom_logger
+from src.logger import logger_name
 from src.mobilizon.mobilizon_types import EventType, EventParameters
+from datetime import datetime, timedelta
+import copy
 
 logger = logging.getLogger(logger_name)
 
@@ -9,7 +11,7 @@ logger = logging.getLogger(logger_name)
 
 class EventKernel:
     event: EventType
-    eventKey: str
+    eventKernelKey: str
     sourceIDs: [str]
     
     def __init__(self, event, eventKey, sourceIDs):
@@ -43,6 +45,41 @@ def getEventObjects(jsonPath: str) -> [EventKernel]:
         eventKernels.append(EventKernel(eventKernel, key, sourceIDs=sourceIDs))
     
     return eventKernels
+
+def generateEventsFromStaticEventKernels(jsonPath: str, eventKernel: EventKernel) -> [EventType]:
+    eventSchema: dict = None
+    with open(jsonPath, "r") as f:
+        eventSchema = json.load(f)
+    
+    times = eventSchema["defaultTimes"]
+    
+    generatedEvents = []
+    
+    startDate = datetime.fromisoformat(eventSchema["startDate"])
+    endDate = datetime.fromisoformat(eventSchema["endDate"])
+    now = datetime.utcnow()
+    
+    if startDate.date() <= now.date() <= endDate.date():
+        for t in times:
+            event: EventType = copy.deepcopy(eventKernel.event)
+            startTime = datetime.fromisoformat(t[0])
+            endTime = datetime.fromisoformat(t[1])
+            
+            timeDifferenceWeeks = (now - startTime).days % 7
+            
+            startTime += timedelta(weeks=timeDifferenceWeeks)
+            endTime += timedelta(weeks=timeDifferenceWeeks)
+            
+            event.beginsOn = startTime.astimezone().isoformat()
+            event.endsOn = endTime.astimezone().isoformat()
+        
+            generatedEvents.append(event)
+        
+        return generatedEvents
+    
+    logger.info(f"Static Event {eventKernel.eventKernelKey} Has Expired")
+    return []
+    
     
 
 
