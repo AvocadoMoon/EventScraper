@@ -12,9 +12,8 @@ class UploadedEventRow:
     date: str
     groupID: str
     groupName: str
-    calendar_id: str
     
-    def __init__(self, uuid: str, id: str, title: str, date: str, groupID: str, groupName: str, calendar_id: str):
+    def __init__(self, uuid: str, id: str, title: str, date: str, groupID: str, groupName: str):
         """_summary_
 
         Args:
@@ -31,12 +30,32 @@ class UploadedEventRow:
         self.date = date
         self.groupID = groupID
         self.groupName = groupName
-        self.calendar_id = calendar_id
+
+class UploadSource:
+    uuid: str
+    websiteURL: str
+    source: str
+    sourceType: str
     
+    def __init__(self, uuid:str, websiteURL: str, source:str, sourceType: str):
+        self.uuid = uuid
+        self.websiteURL = websiteURL
+        self.source = source
+        self.sourceType = sourceType
+
+class SourceTypes:
+    json = "JSON"
+    gCal = "Google Calendar" 
 
 class SQLiteDB:
     sql_db_connection: sqlite3.Connection
     uploaded_events_table_name = "uploaded_events"
+    event_source_table_name = "event_source"
+    
+    allColumns = f"""{uploaded_events_table_name}.uuid, {uploaded_events_table_name}.id,
+    {uploaded_events_table_name}.title, {uploaded_events_table_name}.date, 
+    {uploaded_events_table_name}.group_id, {uploaded_events_table_name}.group_name,
+    {event_source_table_name}.websiteURL, {event_source_table_name}.source, {event_source_table_name}.sourceType"""
     
     def __init__(self, inMemorySQLite: bool = False):
         if inMemorySQLite:
@@ -48,18 +67,13 @@ class SQLiteDB:
     def initializeDB(self) -> sqlite3.Connection:
         db_cursor = self.sql_db_connection.cursor()
         db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {self.uploaded_events_table_name} 
-                          (uuid PRIMARY KEY, id, title text, date text, group_id, group_name, calendar_id)""")
+                          (uuid PRIMARY KEY, id, title text, date text, group_id, group_name)""")
+        db_cursor.execute(f"""CREATE  TABLE IF NOT EXISTS {self.event_source_table_name}
+                          (uuid, websiteURL text, source text, sourceType text, 
+                          FOREIGN KEY (uuid) REFERENCES uploaded_events(uuid) ON DELETE CASCADE)""" )
 
     def close(self):
         self.sql_db_connection.close()
-
-    def insertUploadedEvent(self, rowToAdd: UploadedEventRow):
-        db_cursor: sqlite3.Cursor = self.sql_db_connection.cursor()
-        insertRow = (rowToAdd.uuid, rowToAdd.id, rowToAdd.title, rowToAdd.date, rowToAdd.groupID, rowToAdd.groupName, rowToAdd.calendar_id)
-        
-        db_cursor.execute(f"INSERT INTO {self.uploaded_events_table_name} VALUES (?, ?, ?, ? , ?, ?, ?)", insertRow)
-        self.sql_db_connection.commit()
-
 
     # https://www.sqlite.org/lang_datefunc.html
     # Uses built in date time function
@@ -68,27 +82,22 @@ class SQLiteDB:
         db_cursor.execute(f"DELETE FROM {self.uploaded_events_table_name} WHERE datetime(date) < datetime('now', '-1 month')")
         
         self.sql_db_connection.commit()
-    
-    def selectAllFromTable(self) -> sqlite3.Cursor:
-        db_cursor = self.sql_db_connection.cursor()
-        res = db_cursor.execute(f"SELECT * FROM {self.uploaded_events_table_name}")
-        return res
-    
-    def selectGroupFromTable(self, groupID):
+
+    def selectAllRowsWithCalendarID(self, source):
         db_cursor = self.sql_db_connection.cursor()
         # Comma at the end of (groupID,) turns it into a tuple
-        res = db_cursor.execute(f"SELECT * FROM {self.uploaded_events_table_name} WHERE group_id = ?", (groupID,))
+        res = db_cursor.execute(f"""SELECT {self.allColumns} FROM {self.uploaded_events_table_name} 
+                                INNER JOIN {self.event_source_table_name} ON 
+                                {self.uploaded_events_table_name}.uuid={self.event_source_table_name}.uuid
+                                WHERE source = ?""", (source,))
         return res
     
-    def selectAllRowsWithCalendarID(self, calendar_id):
+    def getLastEventDateForSourceID(self, calendarID) -> datetime:
         db_cursor = self.sql_db_connection.cursor()
-        # Comma at the end of (groupID,) turns it into a tuple
-        res = db_cursor.execute(f"SELECT * FROM {self.uploaded_events_table_name} WHERE calendar_id = ?", (calendar_id,))
-        return res
-    
-    def getLastEventForCalendarID(self, calendarID) -> datetime:
-        db_cursor = self.sql_db_connection.cursor()
-        res = db_cursor.execute(f"""SELECT date FROM {self.uploaded_events_table_name} WHERE calendar_id = ?
+        res = db_cursor.execute(f"""SELECT date FROM {self.uploaded_events_table_name}
+                                INNER JOIN {self.event_source_table_name} ON 
+                                {self.uploaded_events_table_name}.uuid={self.event_source_table_name}.uuid
+                                WHERE source = ?
                                 ORDER BY date DESC LIMIT 1""", (calendarID, ))
         # Conversion to ISO format does not like the Z, that represents UTC aka no time zone
         # so using +00:00 is an equivalent to it
@@ -96,17 +105,36 @@ class SQLiteDB:
         logger.debug(f"Last date found for calendar ID {calendarID}: {dateString}")
         return datetime.fromisoformat(dateString)
     
-    def noEntriesWithCalendarID(self, calendar_id: str) -> bool:
+    def noEntriesWithSourceID(self, calendar_id: str) -> bool:
         res = self.selectAllRowsWithCalendarID(calendar_id)
         return len(res.fetchall()) == 0
     
-    def entryAlreadyInCache(self, date:str, title:str, calendar_id:str) -> bool:
+    def entryAlreadyInCache(self, date:str, title:str, sourceID:str) -> bool:
         db_cursor = self.sql_db_connection.cursor()
-        res = db_cursor.execute(f"""SELECT * FROM {self.uploaded_events_table_name} WHERE 
-                                date = ? AND title = ? AND calendar_id = ?""", (date, title, calendar_id))
-        if(len(res.fetchall()) > 0):
+        res = db_cursor.execute(f"""SELECT {self.allColumns} FROM {self.uploaded_events_table_name}
+                                INNER JOIN {self.event_source_table_name} ON 
+                                {self.uploaded_events_table_name}.uuid={self.event_source_table_name}.uuid
+                                WHERE date = ? AND title = ? AND source = ?""", (date, title, sourceID))
+        query = res.fetchall()
+        if(len(query) > 0):
             return True
         return False
+
+    def insertUploadedEvent(self, rowToAdd: UploadedEventRow, eventSource: UploadSource):
+        db_cursor: sqlite3.Cursor = self.sql_db_connection.cursor()
+        insertRow = (rowToAdd.uuid, rowToAdd.id, rowToAdd.title, rowToAdd.date, rowToAdd.groupID, rowToAdd.groupName)
+        eventSourceRow= (eventSource.uuid, eventSource.websiteURL, eventSource.source, eventSource.sourceType)
+        
+        db_cursor.execute(f"INSERT INTO {self.uploaded_events_table_name} VALUES (?, ?, ?, ? , ?, ?)", insertRow)
+        db_cursor.execute(f"INSERT INTO {self.event_source_table_name} VALUES (?, ? , ?, ?)", eventSourceRow)
+        self.sql_db_connection.commit()
+    
+    def selectAllFromUploadTable(self) -> sqlite3.Cursor:
+        db_cursor = self.sql_db_connection.cursor()
+        res = db_cursor.execute(f"SELECT * FROM {self.uploaded_events_table_name}")
+        return res
+    
+    
         
         
     
