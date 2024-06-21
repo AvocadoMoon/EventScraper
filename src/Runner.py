@@ -6,7 +6,7 @@ import json
 import os
 import logging
 from src.logger import logger_name, setup_custom_logger
-from src.jsonParser import getEventObjects, EventKernel
+from src.jsonParser import getEventObjects, EventKernel, generateEventsFromStaticEventKernels
 
 logger = logging.getLogger(logger_name)
 
@@ -33,20 +33,10 @@ class Runner:
         self.google_calendar_api = GCalAPI()
 
 
-    def _uploadEventsRetrievedFromCalendarID(self, google_calendar_id, eventKernel: EventKernel):
-        lastUploadedEventDate = None
-        if not self.cache_db.noEntriesWithSourceID(google_calendar_id):
-            lastUploadedEventDate = self.cache_db.getLastEventDateForSourceID(google_calendar_id)
-        
-        events: [EventType] = self.google_calendar_api.getAllEventsAWeekFromNow(
-            calendarId=google_calendar_id, eventKernel=eventKernel.event, 
-            checkCacheFunction=self.cache_db.entryAlreadyInCache,
-            dateOfLastEventScraped=lastUploadedEventDate)
-        if (len(events) == 0):
-            return
-        for event in events:
-            event: EventType
-            uploadResponse: dict = None
+    def _uploadEvent(self, event: EventType, eventKernel: EventKernel, sourceID):
+        event: EventType
+        uploadResponse: dict = None
+        if not self.cache_db.entryAlreadyInCache(event.beginsOn, event.title, sourceID):
             if self.testMode:
                 self.fakeUUIDForTests += 1
                 uploadResponse = {"id": 1, "uuid": self.fakeUUIDForTests}
@@ -59,13 +49,27 @@ class Runner:
                                                 date=event.beginsOn,
                                                 groupID=event.attributedToId,
                                                 groupName=eventKernel.eventKernelKey),
-                                              UploadSource(uuid=uploadResponse["uuid"],
-                                                           websiteURL=event.onlineAddress,
-                                                           source=google_calendar_id,
-                                                           sourceType=SourceTypes.gCal))
+                                                UploadSource(uuid=uploadResponse["uuid"],
+                                                            websiteURL=event.onlineAddress,
+                                                            source=sourceID,
+                                                            sourceType=eventKernel.sourceType))
+
+    def _uploadEventsRetrievedFromCalendarID(self, google_calendar_id, eventKernel: EventKernel):
+        lastUploadedEventDate = None
+        if not self.cache_db.noEntriesWithSourceID(google_calendar_id):
+            lastUploadedEventDate = self.cache_db.getLastEventDateForSourceID(google_calendar_id)
+        
+        events: [EventType] = self.google_calendar_api.getAllEventsAWeekFromNow(
+            calendarId=google_calendar_id, eventKernel=eventKernel.event, 
+            checkCacheFunction=self.cache_db.entryAlreadyInCache,
+            dateOfLastEventScraped=lastUploadedEventDate)
+        if (len(events) == 0):
+            return
+        for event in events:
+            self._uploadEvent(event, eventKernel, google_calendar_id)
 
     def getGCalEventsAndUploadThem(self):
-        google_calendars: [EventKernel] = getEventObjects(f"{os.getcwd()}/src/scrapers/GCal.json")
+        google_calendars: [EventKernel] = getEventObjects(f"{os.getcwd()}/src/scrapers/google_calendar/GCal.json", SourceTypes.gCal)
 
         eventKernel: EventKernel
         for eventKernel in google_calendars:
@@ -83,7 +87,17 @@ class Runner:
                     self._uploadEventsRetrievedFromCalendarID(googleCalendarID, gCal)
     
     def getFarmerMarketsAndUploadThem(self):
-        pass 
+        jsonPath = f"{os.getcwd()}/src/scrapers/statics/farmerMarkets.json"
+        eventKernels: [EventKernel] = getEventObjects(jsonPath, SourceTypes.json)
+        
+        eventKernel: EventKernel
+        for eventKernel in eventKernels:
+            logger.info(f"Getting farmer market events for {eventKernel.eventKernelKey}")
+            events: [EventType] = generateEventsFromStaticEventKernels(jsonPath, eventKernel)
+            event: EventType
+            for event in events:
+                event.description = f"Automatically scraped by event bot: \n\n{event.description} \n\n Source for farmer market info: https://portal.ct.gov/doag/adarc/adarc/farmers-market-nutrition-program/authorized-redemption-locations"
+                self._uploadEvent(event, eventKernel, eventKernel.sourceIDs[0])
     
     def cleanUp(self):
         self.mobilizonAPI.logout()
@@ -95,4 +109,5 @@ if __name__ == "__main__":
     setup_custom_logger(logging.INFO)
     runner = Runner()
     runner.getGCalEventsAndUploadThem()
+    runner.getFarmerMarketsAndUploadThem()
     runner.cleanUp()
