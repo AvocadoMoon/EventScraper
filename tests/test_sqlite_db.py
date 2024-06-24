@@ -5,7 +5,7 @@ import unittest
 
 # TODO: Test getting the last event uploaded for a specific group
 
-class EventTableTest(unittest.TestCase):
+class TestEventTable(unittest.TestCase):
     def test_UploadedEventsTable(self):
         
         group1Name = "groupName1"

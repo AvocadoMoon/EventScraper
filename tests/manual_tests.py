@@ -111,7 +111,7 @@ if __name__ == "__main__":
     setup_custom_logger(logging.DEBUG)
     # manualTestCreation()
     # manualTestGoogleCalendar(False)
-    manualTestCacheDB()
+    # manualTestCacheDB()
     # getEventBotInfo()
     # _getAddressInfo()
     
