@@ -7,6 +7,8 @@ import os
 import logging
 from src.logger import logger_name, setup_custom_logger
 from src.jsonParser import getEventObjects, EventKernel, generateEventsFromStaticEventKernels
+from requests.exceptions import HTTPError
+import time
 
 logger = logging.getLogger(logger_name)
 
@@ -103,11 +105,26 @@ class Runner:
         self.mobilizonAPI.logout()
         self.cache_db.close()
         self.google_calendar_api.close()
+
+
     
 
 if __name__ == "__main__":
     setup_custom_logger(logging.INFO)
-    runner = Runner()
-    runner.getGCalEventsAndUploadThem()
-    runner.getFarmerMarketsAndUploadThem()
-    runner.cleanUp()
+    continueScraping = True
+    numRetries = 0
+    runner = None
+    while continueScraping and numRetries < 5:
+        try:
+            runner = Runner()
+            runner.getGCalEventsAndUploadThem()
+            runner.getFarmerMarketsAndUploadThem()
+            runner.cleanUp()
+            continueScraping = False
+        except HTTPError as err:
+            if err.response.status_code == 500 and err.response.message == 'Too many requests':
+                runner.cleanUp()
+                numRetries += 1
+                logger.warning("Going to sleep then retrying to scrape. Retry Num: " + numRetries)
+                time.sleep(120)
+
