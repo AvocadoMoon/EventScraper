@@ -1,16 +1,22 @@
-
-#!/bin/bash
+#!/bin/sh
 
 # Check if the USER_ID environment variable is set
 if [ -n "$USER_ID" ]; then
   usermod -u $USER_ID eventscraper
 fi
 
+ls -la /app/config
 
+# Gosu https://github.com/tianon/gosu
 if [ -n "$GROUP_ID" ]; then
-  groupadd -g $GROUP_ID eventscraperg
-  usermod -g eventscraperg eventscraper
+  groupmod -g $GROUP_ID eventg
 fi
 
-poetry run python /app/src/Runner.py
+chown -R eventscraper:eventg /app
+
+if [ "$(id -u)" -eq 0 ]; then
+  gosu eventscraper:eventg poetry run python /app/src/Runner.py
+else
+  poetry run python /app/src/Runner.py
+fi
 

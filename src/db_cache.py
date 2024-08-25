@@ -64,7 +64,7 @@ class SQLiteDB:
         else:
             cache_db_path = os.environ.get("CACHE_DB_PATH")
             if cache_db_path is not None:
-                self.sql_db_connection = sqlite3.connect(cache_db_path + "/even_cache.db")
+                self.sql_db_connection = sqlite3.connect(cache_db_path + "/event_cache.db")
             else:
                 self.sql_db_connection = sqlite3.connect("event_cache.db")
         self.initializeDB()
