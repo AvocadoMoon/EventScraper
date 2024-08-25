@@ -22,11 +22,18 @@ class Runner:
     
     def __init__(self, testMode:bool = False):
         secrets = None
-        endpoint = "https://ctgrassroots.org/graphiql"
-        with open(f"{os.getcwd()}/src/secrets.json", "r") as f:
-            secrets = json.load(f)
+        endpoint = os.environ.get("MOBILIZON_ENDPOINT")
+        email = os.environ.get("MOBILIZON_EMAIL")
+        passwd = os.environ.get("MOBILIZON_PASSWORD")
         
-        self.mobilizonAPI = MobilizonAPI(endpoint, secrets["email"], secrets["password"])
+        if email is None and passwd is None:
+            loginFilePath = os.environ.get("MOBILIZON_LOGIN_FILE")
+            with open(loginFilePath, "r") as f:
+                secrets = json.load(f)
+                email = secrets["email"]
+                passwd = secrets["password"]
+        
+        self.mobilizonAPI = MobilizonAPI(endpoint, email, passwd)
         if testMode:
             self.cache_db = SQLiteDB(inMemorySQLite=True)
         else:

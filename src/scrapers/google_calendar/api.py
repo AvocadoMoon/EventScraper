@@ -1,4 +1,5 @@
 from google.auth.transport.requests import Request
+import google.auth
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build, Resource
@@ -35,9 +36,10 @@ class GCalAPI:
     _apiClient: Resource
     
     def __init__(self):
-        self._initCalendarReadClient()
+        self._initCalendarReadClientADC()
     
-    def _initCalendarReadClient(self):
+    def _initCalendarReadClientBrowser(self):
+        logger.info("Logged in Google Cal Browser")
         SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
         credentialTokens = None
         credential_token_path = f"{os.getcwd()}/src/token.json"
@@ -56,9 +58,14 @@ class GCalAPI:
             # When refreshed authentication token needs to be re-written, and if authenticating for the first time it needs to be just written
             with open(credential_token_path, "w") as tokenFile:
                 tokenFile.write(credentialTokens.to_json())
-            
-        
         self._apiClient = build("calendar", "v3", credentials=credentialTokens)
+
+    
+    def _initCalendarReadClientADC(self):
+        logger.info("Logged In Google Cal ADC")
+        credentials, projectID = google.auth.default()
+        
+        self._apiClient = build("calendar", "v3", credentials=credentials)
     
 
     def getAllEventsAWeekFromNow(self, eventKernel: EventType, calendarId: str, 

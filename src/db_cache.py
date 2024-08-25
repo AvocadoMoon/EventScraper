@@ -2,6 +2,7 @@ import sqlite3
 from datetime import datetime
 import logging
 from src.logger import logger_name
+import os
 
 logger = logging.getLogger(logger_name)
 
@@ -61,7 +62,11 @@ class SQLiteDB:
         if inMemorySQLite:
             self.sql_db_connection = sqlite3.connect(":memory:")
         else:
-            self.sql_db_connection = sqlite3.connect("event_cache.db")
+            cache_db_path = os.environ.get("CACHE_DB_PATH")
+            if cache_db_path is not None:
+                self.sql_db_connection = sqlite3.connect(cache_db_path + "/even_cache.db")
+            else:
+                self.sql_db_connection = sqlite3.connect("event_cache.db")
         self.initializeDB()
     
     def initializeDB(self) -> sqlite3.Connection:
