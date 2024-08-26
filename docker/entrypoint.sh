@@ -5,8 +5,6 @@ if [ -n "$USER_ID" ]; then
   usermod -u $USER_ID eventscraper
 fi
 
-ls -la /app/config
-
 # Gosu https://github.com/tianon/gosu
 if [ -n "$GROUP_ID" ]; then
   groupmod -g $GROUP_ID eventg

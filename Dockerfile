@@ -8,33 +8,29 @@ ENV CACHE_DB_PATH=/app/config
 ## Install Packages ##
 ######################
 
-RUN apt-get update && apt-get -y install cron
+RUN apt-get update
 RUN apt-get -y install software-properties-common
 RUN add-apt-repository ppa:deadsnakes/ppa && apt-get update
 RUN apt-get -y install python3 && apt-get -y install python3-pip && apt-get -y install python3-poetry
 
-################
-## Cron Setup ##
-################
-# Copy hello-cron file to the cron.d directory
-COPY ./docker/runBotCron /etc/cron.d/runBotCron
- 
-# Give execution rights on the cron job
-RUN chmod 0644 /etc/cron.d/runBotCron
- 
-# Create the log file to be able to run tail
-RUN touch /var/log/cron.log
- 
-# Run the command on container startup
-CMD cron && tail -f /var/log/cron.log
-
-
+##################
+## Add Src Code ##
+##################
 ADD src /app/src
 COPY pyproject.toml /app
 COPY README.md /app
+
+
+#########################################
+## Making Users and Setting Permisions ##
+#########################################
 RUN groupadd eventg
 RUN useradd -m -g eventg eventscraper
 RUN chown eventscraper:eventg -R /app
+RUN find /app/src -type f -exec chmod u=r,g=r,o= {} +
+RUN find /app/src -type d -exec chmod u=rx,g=rx,o=rx {} +
+RUN chmod u=rx,g=rx,o=rx /app/src
+
 
 #################################
 ## Install Python Dependencies ##

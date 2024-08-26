@@ -1,2 +1,0 @@
-# Every monday at hour 22 (11pm)
-* 23 * * 1 poetry run python /app/src/Runner.py
