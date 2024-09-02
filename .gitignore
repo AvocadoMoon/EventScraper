@@ -166,3 +166,5 @@ token.json
 adc.json
 event_cache.db
 docker.env
+
+config/

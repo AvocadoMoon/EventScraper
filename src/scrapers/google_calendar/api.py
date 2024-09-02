@@ -36,13 +36,17 @@ class GCalAPI:
     _apiClient: Resource
     
     def __init__(self):
-        self._initCalendarReadClientADC()
+        use_oidc = os.environ.get("USE_OIDC_TOKEN")
+        if use_oidc:
+            self._initCalendarReadClientBrowser()
+        else:
+            self._initCalendarReadClientADC()
     
     def _initCalendarReadClientBrowser(self):
         logger.info("Logged in Google Cal Browser")
         SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
         credentialTokens = None
-        credential_token_path = f"{os.getcwd()}/src/token.json"
+        credential_token_path = f"{os.getcwd()}/config/token.json"
         if os.path.exists(credential_token_path):
             credentialTokens = Credentials.from_authorized_user_file(credential_token_path, SCOPES)
         
@@ -51,7 +55,7 @@ class GCalAPI:
                 credentialTokens.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                        f"{os.getcwd()}/src/OAuthClientApp.json", SCOPES
+                        f"{os.getcwd()}/config/OAuthClientApp.json", SCOPES
                     )
                 credentialTokens = flow.run_local_server(port=9000)
             
@@ -180,3 +184,9 @@ def _parse_google_location(location:str, defaultLocation: EventParameters.Addres
         return address
     except GeocoderTimedOut:
         return None
+    
+
+if __name__ == "__main__":
+    gcal = GCalAPI()
+    gcal._initCalendarReadClientBrowser()
+
