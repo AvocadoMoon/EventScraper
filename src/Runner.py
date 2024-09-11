@@ -1,6 +1,6 @@
 from src.db_cache import SQLiteDB, UploadedEventRow, UploadSource, SourceTypes
 from src.mobilizon.mobilizon import MobilizonAPI
-from src.mobilizon.mobilizon_types import EventType
+from src.mobilizon.mobilizon_types import EventType, _generate_args
 from src.scrapers.google_calendar.api import GCalAPI, ExpiredToken
 import json
 import os
@@ -8,6 +8,8 @@ import logging
 from src.logger import logger_name, setup_custom_logger
 from src.jsonParser import getEventObjects, EventKernel, generateEventsFromStaticEventKernels
 from requests.exceptions import HTTPError
+from slack_sdk.webhook import WebhookClient
+from pydantic import BaseModel
 import time
 import datetime
 
@@ -145,10 +147,31 @@ def daysToSleep(days):
     
     return timeToSleep + (60 * 60 * 24 * days)
 
+
+def produceSlackMessage(color, title, text, priority):
+    return {
+            "color": color,
+            "author_name": "CTEvent Scraper",
+            "author_icon": "https://ctgrassroots.org/favicon.ico",
+            "title": title,
+            "title_link": "google.com",
+            "text": text,
+            "fields": [
+                {
+                    "title": "Priority",
+                    "value": priority,
+                    "short": "false"
+                }
+            ],
+            "footer": "CTEvent Scraper",
+        }
+
+
 if __name__ == "__main__":
     setup_custom_logger(logging.INFO)
     logger.info("Scraper Started")
     sleeping = 2
+    webhook = WebhookClient(os.environ.get("SLACK_WEBHOOK"))
     while True:
         
         timeToSleep = daysToSleep(sleeping)
@@ -160,10 +183,17 @@ if __name__ == "__main__":
             logger.warning("Expired token.json needs to be replaced")
             timeToSleep = daysToSleep(1)
             logger.warning("Sleeping only 1 day")
+            response = webhook.send(attachments=[
+                produceSlackMessage("#e6e209", "Expired Token", "Replace token.json", "Medium")
+            ])
         
         except Exception as e:
-            logger.error("Unknown Error: " + e)
+            logger.error("Unknown Error")
+            logger.error(e)
             logger.error("Going to Sleep for 7 days")
+            webhook.send(attachments=[
+                produceSlackMessage("#ab1a13", "Event Scraper Unknown Error", "Check logs for error.", "High")
+            ])
             timeToSleep = daysToSleep(7)
         
         time.sleep(timeToSleep)
