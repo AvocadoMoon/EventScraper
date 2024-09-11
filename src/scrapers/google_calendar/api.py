@@ -32,6 +32,10 @@ logger = logging.getLogger(logger_name)
 # https://developers.google.com/resources/api-libraries/documentation/calendar/v3/python/latest/calendar_v3.events.html#list
 
 
+class ExpiredToken(Exception):
+    pass
+
+
 class GCalAPI:
     _apiClient: Resource
     
@@ -51,17 +55,20 @@ class GCalAPI:
             credentialTokens = Credentials.from_authorized_user_file(credential_token_path, SCOPES)
         
         if not credentialTokens or not credentialTokens.valid:
-            if credentialTokens and credentialTokens.expired and credentialTokens.refresh_token:
-                credentialTokens.refresh(Request())
-            else:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                        f"{os.getcwd()}/config/OAuthClientApp.json", SCOPES
-                    )
-                credentialTokens = flow.run_local_server(port=9000)
-            
-            # When refreshed authentication token needs to be re-written, and if authenticating for the first time it needs to be just written
-            with open(credential_token_path, "w") as tokenFile:
-                tokenFile.write(credentialTokens.to_json())
+            try: 
+                if credentialTokens and credentialTokens.expired and credentialTokens.refresh_token:
+                    credentialTokens.refresh(Request())
+                else:
+                    flow = InstalledAppFlow.from_client_secrets_file(
+                            f"{os.getcwd()}/config/OAuthClientApp.json", SCOPES
+                        )
+                    credentialTokens = flow.run_local_server(port=9000)
+                
+                # When refreshed authentication token needs to be re-written, and if authenticating for the first time it needs to be just written
+                with open(credential_token_path, "w") as tokenFile:
+                    tokenFile.write(credentialTokens.to_json())
+            except Exception:
+                raise ExpiredToken
         self._apiClient = build("calendar", "v3", credentials=credentialTokens)
 
     

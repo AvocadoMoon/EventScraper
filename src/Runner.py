@@ -1,7 +1,7 @@
 from src.db_cache import SQLiteDB, UploadedEventRow, UploadSource, SourceTypes
 from src.mobilizon.mobilizon import MobilizonAPI
 from src.mobilizon.mobilizon_types import EventType
-from src.scrapers.google_calendar.api import GCalAPI
+from src.scrapers.google_calendar.api import GCalAPI, ExpiredToken
 import json
 import os
 import logging
@@ -132,28 +132,35 @@ def runner():
                 numRetries += 1
                 logger.warning("Going to sleep then retrying to scrape. Retry Num: " + numRetries)
                 time.sleep(120)
+
+def daysToSleep(days):
+    now = datetime.datetime.now()
+    secondsFromZero = (now.hour * 60 * 60)
+    timeAt2AM = 2 * 60 * 60
+    timeToSleep = timeAt2AM
+    if secondsFromZero > timeAt2AM:
+        timeToSleep = ((23 * 60 * 60) - secondsFromZero) + timeAt2AM
+    else:
+        timeToSleep = timeAt2AM - secondsFromZero
     
+    return timeToSleep + (60 * 60 * 24 * days)
 
 if __name__ == "__main__":
     setup_custom_logger(logging.INFO)
     logger.info("Scraper Started")
-    daysToSleep = 3
+    sleeping = 2
     while True:
+        
+        timeToSleep = daysToSleep(sleeping)
         logger.info("Scraping")
-        runner()
-        logger.info("Sleeping " + str(daysToSleep) + " Days Until Next Scrape")
+        try:
+            runner()
+            logger.info("Sleeping " + str(sleeping) + " Days Until Next Scrape")
+        except ExpiredToken:
+            logger.warning("Expired token.json needs to be replaced")
+            timeToSleep = daysToSleep(1)
+            logger.warning("Sleeping only 1 day")
         
-        now = datetime.datetime.now()
-        secondsFromZero = (now.hour * 60 * 60)
-        timeAt2AM = 2 * 60 * 60
-        timeToSleep = timeAt2AM
-        if secondsFromZero > timeAt2AM:
-            timeToSleep = ((23 * 60 * 60) - secondsFromZero) + timeAt2AM
-        else:
-            timeToSleep = timeAt2AM - secondsFromZero
-        
-        # Roughly three day wait, give or take an hour
-        timeToSleep = timeToSleep + (60 * 60 * 72)
         time.sleep(timeToSleep)
     
     logger.info("Scraper Stopped")
