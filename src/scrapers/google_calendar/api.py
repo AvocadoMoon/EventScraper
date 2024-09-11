@@ -1,4 +1,5 @@
 from google.auth.transport.requests import Request
+import google.auth
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build, Resource
@@ -31,34 +32,51 @@ logger = logging.getLogger(logger_name)
 # https://developers.google.com/resources/api-libraries/documentation/calendar/v3/python/latest/calendar_v3.events.html#list
 
 
+class ExpiredToken(Exception):
+    pass
+
+
 class GCalAPI:
     _apiClient: Resource
     
     def __init__(self):
-        self._initCalendarReadClient()
+        use_oidc = os.environ.get("USE_OIDC_TOKEN")
+        if use_oidc:
+            self._initCalendarReadClientBrowser()
+        else:
+            self._initCalendarReadClientADC()
     
-    def _initCalendarReadClient(self):
+    def _initCalendarReadClientBrowser(self):
+        logger.info("Logged in Google Cal Browser")
         SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
         credentialTokens = None
-        credential_token_path = f"{os.getcwd()}/src/token.json"
+        credential_token_path = f"{os.getcwd()}/config/token.json"
         if os.path.exists(credential_token_path):
             credentialTokens = Credentials.from_authorized_user_file(credential_token_path, SCOPES)
         
         if not credentialTokens or not credentialTokens.valid:
-            if credentialTokens and credentialTokens.expired and credentialTokens.refresh_token:
-                credentialTokens.refresh(Request())
-            else:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                        f"{os.getcwd()}/src/OAuthClientApp.json", SCOPES
-                    )
-                credentialTokens = flow.run_local_server(port=9000)
-            
-            # When refreshed authentication token needs to be re-written, and if authenticating for the first time it needs to be just written
-            with open(credential_token_path, "w") as tokenFile:
-                tokenFile.write(credentialTokens.to_json())
-            
-        
+            try: 
+                if credentialTokens and credentialTokens.expired and credentialTokens.refresh_token:
+                    credentialTokens.refresh(Request())
+                else:
+                    flow = InstalledAppFlow.from_client_secrets_file(
+                            f"{os.getcwd()}/config/OAuthClientApp.json", SCOPES
+                        )
+                    credentialTokens = flow.run_local_server(port=9000)
+                
+                # When refreshed authentication token needs to be re-written, and if authenticating for the first time it needs to be just written
+                with open(credential_token_path, "w") as tokenFile:
+                    tokenFile.write(credentialTokens.to_json())
+            except Exception:
+                raise ExpiredToken
         self._apiClient = build("calendar", "v3", credentials=credentialTokens)
+
+    
+    def _initCalendarReadClientADC(self):
+        logger.info("Logged In Google Cal ADC")
+        credentials, projectID = google.auth.default()
+        
+        self._apiClient = build("calendar", "v3", credentials=credentials)
     
 
     def getAllEventsAWeekFromNow(self, eventKernel: EventType, calendarId: str, 
@@ -173,3 +191,9 @@ def _parse_google_location(location:str, defaultLocation: EventParameters.Addres
         return address
     except GeocoderTimedOut:
         return None
+    
+
+if __name__ == "__main__":
+    gcal = GCalAPI()
+    gcal._initCalendarReadClientBrowser()
+
