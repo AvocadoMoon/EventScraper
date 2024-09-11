@@ -163,3 +163,8 @@ cython_debug/
 secrets.json
 OAuthClientApp.json
 token.json
+adc.json
+event_cache.db
+docker.env
+
+config/

@@ -22,8 +22,6 @@ class retry_if_not_exception_type(retry_if_exception):
             lambda e: not isinstance(e, exception_types))
 
 
-class BadRequest(Exception):
-    pass
 
 # Single under score signifies hidden in python
 
@@ -69,20 +67,10 @@ class _MobilizonClient:
 
     
     # attempts at 0s, 2s, 4s, 8s
-    @retry(reraise=True, retry=retry_if_not_exception_type(BadRequest), stop=stop_after_attempt(4),
+    @retry(reraise=True, stop=stop_after_attempt(4),
            wait=wait_exponential(multiplier=2))
     def publish(self, query, file:bool = False, params: dict = None):
-        try:
-            response = self.client.execute(query) if not file else self.client.execute(query, variable_values=params, upload_files=True)
-        except HTTPError as e:
-            if e.response.status_code in [400, 404]:
-                raise BadRequest(e)
-            else:
-                raise
-        except TransportQueryError as e:
-            raise BadRequest(e)
-        except:
-            raise
+        response = self.client.execute(query) if not file else self.client.execute(query, variable_values=params, upload_files=True)
         return response
 
 
