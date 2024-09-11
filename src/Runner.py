@@ -161,6 +161,11 @@ if __name__ == "__main__":
             timeToSleep = daysToSleep(1)
             logger.warning("Sleeping only 1 day")
         
+        except Exception as e:
+            logger.error("Unknown Error: " + e)
+            logger.error("Going to Sleep for 7 days")
+            timeToSleep = daysToSleep(7)
+        
         time.sleep(timeToSleep)
     
     logger.info("Scraper Stopped")
