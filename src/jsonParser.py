@@ -1,7 +1,7 @@
 import json
 import logging
 from src.logger import logger_name
-from src.mobilizon.types import EventType, EventParameters
+from src.publishers.mobilizon import EventType, EventParameters
 from src.db_cache import SourceTypes
 from datetime import datetime, timedelta
 import copy

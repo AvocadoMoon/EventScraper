@@ -1,6 +1,6 @@
 from src.db_cache import SQLiteDB, UploadedEventRow, UploadSource, SourceTypes
-from src.mobilizon.api import MobilizonAPI
-from src.mobilizon.types import EventType, _generate_args
+from src.publishers.mobilizon import MobilizonAPI
+from src.publishers.mobilizon import EventType
 from src.scrapers.google_calendar.api import GCalAPI, ExpiredToken
 import json
 import os
@@ -9,7 +9,6 @@ from src.logger import logger_name, setup_custom_logger
 from src.jsonParser import getEventObjects, EventKernel, generateEventsFromStaticEventKernels
 from requests.exceptions import HTTPError
 from slack_sdk.webhook import WebhookClient
-from pydantic import BaseModel
 import time
 import datetime
 

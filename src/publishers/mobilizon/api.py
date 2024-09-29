@@ -1,10 +1,8 @@
 from gql import Client
 from gql.transport.requests import RequestsHTTPTransport
-from gql.transport.exceptions import TransportQueryError
-from requests.exceptions import HTTPError
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
-from src.mobilizon.gql_requests import EventGQL, AuthenticationGQL, ActorsGQL
-from src.mobilizon.types import EventType, Actor
+from src.publishers.mobilizon.gql_requests import EventGQL, AuthenticationGQL, ActorsGQL
+from src.publishers.mobilizon.types import EventType, Actor
 import requests
 import json
 import logging
