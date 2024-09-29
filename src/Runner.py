@@ -1,6 +1,6 @@
 from src.db_cache import SQLiteDB, UploadedEventRow, UploadSource, SourceTypes
-from src.mobilizon.mobilizon import MobilizonAPI
-from src.mobilizon.mobilizon_types import EventType, _generate_args
+from src.mobilizon.api import MobilizonAPI
+from src.mobilizon.types import EventType, _generate_args
 from src.scrapers.google_calendar.api import GCalAPI, ExpiredToken
 import json
 import os

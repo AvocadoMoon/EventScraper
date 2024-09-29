@@ -1,5 +1,5 @@
-from src.mobilizon.mobilizon import MobilizonAPI
-from src.mobilizon.mobilizon_types import EventParameters, EventType
+from src.mobilizon.api import MobilizonAPI
+from src.mobilizon.types import EventParameters, EventType
 from src.db_cache import UploadedEventRow, SQLiteDB, UploadSource, SourceTypes
 from src.scrapers.google_calendar.api import GCalAPI
 from datetime import timezone, timedelta, datetime

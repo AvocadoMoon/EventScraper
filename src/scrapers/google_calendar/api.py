@@ -5,7 +5,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build, Resource
 from googleapiclient.errors import HttpError
 from datetime import datetime, timedelta
-from src.mobilizon.mobilizon_types import EventType, EventParameters
+from src.mobilizon.types import EventType, EventParameters
 import os
 import logging
 from geopy.geocoders import Nominatim
