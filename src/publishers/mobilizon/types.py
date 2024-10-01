@@ -93,7 +93,7 @@ class EventParameters:
         
 
 
-class EventType(BaseModel):
+class MobilizonEvent(BaseModel):
     """_summary_
 
     Args:

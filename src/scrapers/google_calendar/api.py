@@ -5,7 +5,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build, Resource
 from googleapiclient.errors import HttpError
 from datetime import datetime, timedelta
-from src.publishers.mobilizon import EventType, EventParameters
+from src.publishers.mobilizon.types import MobilizonEvent, EventParameters
 import os
 import logging
 from geopy.geocoders import Nominatim
@@ -40,13 +40,9 @@ class GCalAPI:
     _apiClient: Resource
     
     def __init__(self):
-        use_oidc = os.environ.get("USE_OIDC_TOKEN")
-        if use_oidc:
-            self._initCalendarReadClientBrowser()
-        else:
-            self._initCalendarReadClientADC()
+        pass
     
-    def _initCalendarReadClientBrowser(self):
+    def init_calendar_read_client_browser(self):
         logger.info("Logged in Google Cal Browser")
         SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
         credentialTokens = None
@@ -72,16 +68,16 @@ class GCalAPI:
         self._apiClient = build("calendar", "v3", credentials=credentialTokens)
 
     
-    def _initCalendarReadClientADC(self):
+    def init_calendar_read_client_adc(self):
         logger.info("Logged In Google Cal ADC")
         credentials, projectID = google.auth.default()
         
         self._apiClient = build("calendar", "v3", credentials=credentials)
     
 
-    def getAllEventsAWeekFromNow(self, eventKernel: EventType, calendarId: str, 
-                                 checkCacheFunction, 
-                                 dateOfLastEventScraped: datetime = None) -> [EventType]:
+    def getAllEventsAWeekFromNow(self, eventKernel: MobilizonEvent, calendarId: str,
+                                 checkCacheFunction,
+                                 dateOfLastEventScraped: datetime = None) -> [MobilizonEvent]:
         """Get events all events for that specific calender a week from today.
 
         Args:

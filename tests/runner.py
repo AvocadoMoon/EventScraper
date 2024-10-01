@@ -17,15 +17,15 @@ class TestRunner(unittest.TestCase):
     
     @classmethod
     def tearDownClass(cls):
-        cls.runner.cleanUp()
+        cls.runner.clean_up()
     
     def test_Runners_Idempotency(self):
         
-        self.runner.getGCalEventsAndUploadThem()
-        db_results = self.runner.cache_db.selectAllFromTable().fetchall()
+        self.runner.run()
+        db_results = self.runner.cache_db.selectAllFromUploadTable().fetchall()
         
-        self.runner.getGCalEventsAndUploadThem()
-        second_db_results = self.runner.cache_db.selectAllFromTable().fetchall()
+        self.runner.run()
+        second_db_results = self.runner.cache_db.selectAllFromUploadTable().fetchall()
             
         self.assertEqual(len(db_results), len(second_db_results))
         

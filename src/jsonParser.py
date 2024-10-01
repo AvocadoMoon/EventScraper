@@ -1,7 +1,9 @@
 import json
 import logging
+import urllib.request
+
 from src.logger import logger_name
-from src.publishers.mobilizon import EventType, EventParameters
+from src.publishers.mobilizon.types import MobilizonEvent, EventParameters
 from src.db_cache import SourceTypes
 from datetime import datetime, timedelta
 import copy
@@ -10,83 +12,83 @@ logger = logging.getLogger(logger_name)
 
 
 
-class EventKernel:
-    event: EventType
-    eventKernelKey: str
-    sourceIDs: [str]
+class GroupEventsKernel:
+    event: MobilizonEvent
+    group_key: str
+    event_sourceIDs: [str]
     sourceType: SourceTypes
     
-    def __init__(self, event, eventKey, sourceIDs, sourceType):
+    def __init__(self, event, event_key, source_ids, source_type):
         self.event = event
-        self.sourceIDs = sourceIDs
-        self.eventKernelKey = eventKey
-        self.sourceType = sourceType
+        self.event_sourceIDs = source_ids
+        self.group_key = event_key
+        self.sourceType = source_type
 
 
 
 
-def getEventObjects(jsonPath: str, sourceType: SourceTypes) -> [EventKernel]:
-    eventSchema: dict = None
-    with open(jsonPath, "r") as f:
-        eventSchema = json.load(f)
+def get_event_objects(json_path: str, source_type: SourceTypes) -> [GroupEventsKernel]:
+    event_schema: dict = None
+    with urllib.request.urlopen(json_path) as f:
+        event_schema = json.load(f)
     
-    eventKernels: [EventKernel] = []
-    for key, event in eventSchema.items():
-        def noneIfNotPresent(x):
+    event_kernels: [GroupEventsKernel] = []
+    for key, event in event_schema.items():
+        def none_if_not_present(x):
             return None if x not in event else event[x]
         
         
-        eventAddress = None if "defaultLocation" not in event else EventParameters.Address(**event["defaultLocation"])
+        event_address = None if "defaultLocation" not in event else EventParameters.Address(**event["defaultLocation"])
         category = None if "defaultCategory" not in event else EventParameters.Categories[event["defaultCategory"]]
-        eventKernel = EventType(event["groupID"], noneIfNotPresent("title"), 
-                            noneIfNotPresent("defaultDescription"), noneIfNotPresent("beginsOn"),
-                            event["onlineAddress"], noneIfNotPresent("endsOn"), 
-                            eventAddress, category, 
-                            noneIfNotPresent("defaultTags"), EventParameters.MediaInput(event["defaultImageID"]))
+        event_kernel = MobilizonEvent(event["groupID"], none_if_not_present("title"),
+                                     none_if_not_present("defaultDescription"), none_if_not_present("beginsOn"),
+                                     event["onlineAddress"], none_if_not_present("endsOn"),
+                                     event_address, category,
+                                     none_if_not_present("defaultTags"), EventParameters.MediaInput(event["defaultImageID"]))
 
-        sourceIDs = noneIfNotPresent("sourceIDs")
-        eventKernels.append(EventKernel(eventKernel, key, sourceIDs=sourceIDs, sourceType=sourceType))
+        source_ids = none_if_not_present("sourceIDs")
+        event_kernels.append(GroupEventsKernel(event_kernel, key, source_ids=source_ids, source_type=source_type))
     
-    return eventKernels
+    return event_kernels
 
-def generateEventsFromStaticEventKernels(jsonPath: str, eventKernel: EventKernel) -> [EventType]:
-    eventSchema: dict = None
-    with open(jsonPath, "r") as f:
-        eventSchema = json.load(f)
+def generate_events_from_static_event_kernels(json_path: str, event_kernel: GroupEventsKernel) -> [MobilizonEvent]:
+    event_schema: dict = None
+    with urllib.request.urlopen(json_path) as f:
+        event_schema = json.load(f)
     
-    times = eventSchema[eventKernel.eventKernelKey]["defaultTimes"]
+    times = event_schema[event_kernel.group_key]["defaultTimes"]
     
-    generatedEvents = []
+    generated_events = []
     
     # startDate = datetime.fromisoformat(eventSchema[eventKernel.eventKernelKey]["startDate"])
-    endDate = datetime.fromisoformat(eventSchema[eventKernel.eventKernelKey]["endDate"])
+    end_date = datetime.fromisoformat(event_schema[event_kernel.group_key]["endDate"])
     now = datetime.utcnow().astimezone()
     
-    if now.date() <= endDate.date():
+    if now.date() <= end_date.date():
         for t in times:
-            event: EventType = copy.deepcopy(eventKernel.event)
-            startTime = datetime.fromisoformat(t[0])
-            endTime = datetime.fromisoformat(t[1])
+            event: MobilizonEvent = copy.deepcopy(event_kernel.event)
+            start_time = datetime.fromisoformat(t[0])
+            end_time = datetime.fromisoformat(t[1])
             
-            timeDifferenceWeeks = (now - startTime).days // 7 # Floor division that can result in week prior event
+            time_difference_weeks = (now - start_time).days // 7 # Floor division that can result in week prior event
             
-            startTime += timedelta(weeks=timeDifferenceWeeks)
-            endTime += timedelta(weeks=timeDifferenceWeeks)
+            start_time += timedelta(weeks=time_difference_weeks)
+            end_time += timedelta(weeks=time_difference_weeks)
             
-            if startTime < now:
-                startTime += timedelta(weeks=1)
-                endTime += timedelta(weeks=1)
-                if startTime > endDate:
+            if start_time < now:
+                start_time += timedelta(weeks=1)
+                end_time += timedelta(weeks=1)
+                if start_time > end_date:
                     return []
             
-            event.beginsOn = startTime.astimezone().isoformat()
-            event.endsOn = endTime.astimezone().isoformat()
+            event.beginsOn = start_time.astimezone().isoformat()
+            event.endsOn = end_time.astimezone().isoformat()
         
-            generatedEvents.append(event)
+            generated_events.append(event)
         
-        return generatedEvents
+        return generated_events
     
-    logger.info(f"Static Event {eventKernel.eventKernelKey} Has Expired")
+    logger.info(f"Static Event {event_kernel.group_key} Has Expired")
     return []
     
     

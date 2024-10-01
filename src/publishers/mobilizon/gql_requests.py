@@ -1,5 +1,5 @@
 from gql import gql
-from src.publishers.mobilizon.types import EventType
+from src.publishers.mobilizon.types import MobilizonEvent
 from pydantic import BaseModel
 from enum import Enum
 
@@ -41,7 +41,7 @@ def conditional_gql_inputs(classDataObject: BaseModel or dict):
 
 # ==== GQL : Events ====
 class EventGQL:
-    def createEventGQL(eventInformation: EventType):
+    def createEventGQL(eventInformation: MobilizonEvent):
         gqlString = f"""
         mutation {{ createEvent(
           {conditional_gql_inputs(eventInformation)}
