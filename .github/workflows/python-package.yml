@@ -26,7 +26,7 @@ jobs:
         python -m pip install poetry
         export POETRY_VIRTUALENVS_IN_PROJECT=true
         poetry install
-        source .venv/bin/activate
     - name: Test with pytest
       run: |
+        source .venv/bin/activate
         pytest
