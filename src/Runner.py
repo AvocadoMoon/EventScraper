@@ -12,56 +12,51 @@ from src.logger import logger_name, setup_custom_logger
 from src.publishers.abc_publisher import Publisher
 from src.publishers.mobilizon.uploader import MobilizonUploader
 from src.scrapers.abc_scraper import Scraper, EventsToUploadFromSourceID
-from src.scrapers.google_calendar.api import GCalAPI, ExpiredToken
+from src.scrapers.google_calendar.api import ExpiredToken
 from src.scrapers.google_calendar.scraper import GoogleCalendarScraper
 from src.scrapers.statics.scraper import StaticScraper
 
 logger = logging.getLogger(logger_name)
 
-class Runner:
-    def __init__(self, test:bool= True):
-        self.cache_db = SQLiteDB(inMemorySQLite=test)
+class RunnerSubmission:
+    def __init__(self, submitted_db: SQLiteDB,
+                 submitted_publishers: {Publisher: [(Scraper, [GroupEventsKernel])]},
+                 test: bool):
+        self.cache_db = submitted_db
         self.test = test
+        self.publishers = submitted_publishers
 
-    def run(self):
-        continue_scraping = True
-        num_retries = 0
-        google_calendars: [GroupEventsKernel] = get_event_objects(f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/gcal.json", SourceTypes.gCal)
-        farmers_market: [GroupEventsKernel] = get_event_objects(f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/farmers_market.json", SourceTypes.json)
 
-        while continue_scraping and num_retries < 5:
-            try:
-                publishers: {Publisher: [(Scraper, [GroupEventsKernel])]} = {
-                    MobilizonUploader(self.test, self.cache_db) :
-                        [(StaticScraper(), farmers_market),
-                         (GoogleCalendarScraper(self.cache_db), google_calendars)
-                         ]
-                }
-                for publisher in publishers.keys():
-                    publisher: Publisher
-                    publisher.connect()
-                    scraper_and_kernel_list = publishers[publisher]
-                    for scraper_and_kernels in scraper_and_kernel_list:
-                        scraper: Scraper = scraper_and_kernels[0]
-                        scraper.connect_to_source()
-                        event_kernels: [GroupEventsKernel] = scraper_and_kernels[1]
 
-                        for event_kernel in event_kernels:
-                            events: [EventsToUploadFromSourceID] = scraper.retrieve_from_source(event_kernel)
-                            publisher.upload(events)
+def runner(runner_submission: RunnerSubmission):
+    continue_scraping = True
+    num_retries = 0
 
-                        scraper.close()
-                    publisher.close()
+    while continue_scraping and num_retries < 5:
+        try:
+            submitted_publishers: {Publisher: [(Scraper, [GroupEventsKernel])]} = runner_submission.publishers
+            for publisher in submitted_publishers.keys():
+                publisher: Publisher
+                publisher.connect()
+                scraper_and_kernel_list = submitted_publishers[publisher]
+                for scraper_and_kernels in scraper_and_kernel_list:
+                    scraper: Scraper = scraper_and_kernels[0]
+                    scraper.connect_to_source()
+                    event_kernels: [GroupEventsKernel] = scraper_and_kernels[1]
 
-                continue_scraping = False
-            except HTTPError as err:
-                if err.response.status_code == 500 and err.response.message == 'Too many requests':
-                    num_retries += 1
-                    logger.warning("Going to sleep then retrying to scrape. Retry Num: " + num_retries)
-                    time.sleep(120)
+                    for event_kernel in event_kernels:
+                        events: [EventsToUploadFromSourceID] = scraper.retrieve_from_source(event_kernel)
+                        publisher.upload(events)
 
-    def clean_up(self):
-        self.cache_db.close()
+                    scraper.close()
+                publisher.close()
+
+            continue_scraping = False
+        except HTTPError as err:
+            if err.response.status_code == 500 and err.response.message == 'Too many requests':
+                num_retries += 1
+                logger.warning("Going to sleep then retrying to scrape. Retry Num: " + num_retries)
+                time.sleep(120)
 
 def days_to_sleep(days):
     now = datetime.datetime.now()
@@ -101,12 +96,30 @@ if __name__ == "__main__":
     sleeping = 2
     webhook = WebhookClient(os.environ.get("SLACK_WEBHOOK"))
     while True:
-        
+        #####################
+        # Create Submission #
+        #####################
+        google_calendars: [GroupEventsKernel] = get_event_objects(
+            f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/gcal.json", SourceTypes.gCal)
+        farmers_market: [GroupEventsKernel] = get_event_objects(
+            f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/farmers_market.json",
+            SourceTypes.json)
+        cache_db: SQLiteDB = SQLiteDB()
+        publishers = {
+            MobilizonUploader(True, cache_db): [
+                (StaticScraper(), farmers_market),
+                (GoogleCalendarScraper(cache_db), google_calendars)
+            ]
+        }
+        submission: RunnerSubmission = RunnerSubmission(cache_db, publishers, False)
+
+        ######################
+        # Execute Submission #
+        ######################
         timeToSleep = days_to_sleep(sleeping)
         logger.info("Scraping")
-        runner = Runner(test=False)
         try:
-            runner.run()
+            runner(submission)
             logger.info("Sleeping " + str(sleeping) + " Days Until Next Scrape")
         except ExpiredToken:
             logger.warning("Expired token.json needs to be replaced")
@@ -125,7 +138,7 @@ if __name__ == "__main__":
             ])
             timeToSleep = days_to_sleep(7)
 
-        runner.clean_up()
+        cache_db.close()
         time.sleep(timeToSleep)
     
     logger.info("Scraper Stopped")
