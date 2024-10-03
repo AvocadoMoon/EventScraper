@@ -15,15 +15,15 @@ def _generate_args(localVariables: dict) -> dict:
 
 
 
-class EventsToUploadFromSourceID:
+class EventsToUploadFromCalendarID:
     events: [MobilizonEvent] = None
     eventKernel: GroupEventsKernel = None
-    source_id: str = ""
+    calendar_id: str = ""
 
     def __init__(self, events: [MobilizonEvent], event_kernel: GroupEventsKernel, source_id: str):
         self.events = events
         self.eventKernel = event_kernel
-        self.source_id = source_id
+        self.calendar_id = source_id
 
 
 class Scraper(ABC):
@@ -36,7 +36,7 @@ class Scraper(ABC):
         pass
 
     @abstractmethod
-    def retrieve_from_source(self, event_kernel: GroupEventsKernel) -> [EventsToUploadFromSourceID]:
+    def retrieve_from_source(self, event_kernel: GroupEventsKernel) -> [EventsToUploadFromCalendarID]:
         pass
 
     @abstractmethod

@@ -4,7 +4,7 @@ import urllib.request
 
 from src.logger import logger_name
 from src.publishers.mobilizon.types import MobilizonEvent, EventParameters
-from src.db_cache import SourceTypes
+from src.db_cache import ScraperTypes
 from datetime import datetime, timedelta
 import copy
 
@@ -16,18 +16,18 @@ class GroupEventsKernel:
     event_template: MobilizonEvent
     group_name: str
     calendar_ids: [str]
-    sourceType: SourceTypes
+    scraper_type: ScraperTypes
     
     def __init__(self, event, group_name, calendar_ids, source_type):
         self.event_template = event
         self.calendar_ids = calendar_ids
         self.group_name = group_name
-        self.sourceType = source_type
+        self.scraper_type = source_type
 
 
 
 
-def get_event_objects(json_path: str, source_type: SourceTypes) -> [GroupEventsKernel]:
+def get_group_kernels(json_path: str, source_type: ScraperTypes) -> [GroupEventsKernel]:
     group_schema: dict = None
     with urllib.request.urlopen(json_path) as f:
         group_schema = json.load(f)
@@ -51,7 +51,7 @@ def get_event_objects(json_path: str, source_type: SourceTypes) -> [GroupEventsK
     
     return event_kernels
 
-def generate_events_from_static_event_kernels(json_path: str, event_kernel: GroupEventsKernel) -> [MobilizonEvent]:
+def generate_events_from_static_group_kernel(json_path: str, event_kernel: GroupEventsKernel) -> [MobilizonEvent]:
     event_schema: dict = None
     with urllib.request.urlopen(json_path) as f:
         event_schema = json.load(f)

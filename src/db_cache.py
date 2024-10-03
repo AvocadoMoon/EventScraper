@@ -44,7 +44,7 @@ class UploadSource:
         self.source = source
         self.sourceType = sourceType
 
-class SourceTypes:
+class ScraperTypes:
     json = "JSON"
     gCal = "Google Calendar" 
 

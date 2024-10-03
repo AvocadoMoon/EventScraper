@@ -6,12 +6,12 @@ import time
 from requests.exceptions import HTTPError
 from slack_sdk.webhook import WebhookClient
 
-from src.db_cache import SQLiteDB, SourceTypes
-from src.jsonParser import GroupEventsKernel, get_event_objects
+from src.db_cache import SQLiteDB, ScraperTypes
+from src.jsonParser import GroupEventsKernel, get_group_kernels
 from src.logger import logger_name, setup_custom_logger
 from src.publishers.abc_publisher import Publisher
 from src.publishers.mobilizon.uploader import MobilizonUploader
-from src.scrapers.abc_scraper import Scraper, EventsToUploadFromSourceID
+from src.scrapers.abc_scraper import Scraper, EventsToUploadFromCalendarID
 from src.scrapers.google_calendar.api import ExpiredToken
 from src.scrapers.google_calendar.scraper import GoogleCalendarScraper
 from src.scrapers.statics.scraper import StaticScraper
@@ -45,7 +45,7 @@ def runner(runner_submission: RunnerSubmission):
                     event_kernels: [GroupEventsKernel] = scraper_and_kernels[1]
 
                     for event_kernel in event_kernels:
-                        events: [EventsToUploadFromSourceID] = scraper.retrieve_from_source(event_kernel)
+                        events: [EventsToUploadFromCalendarID] = scraper.retrieve_from_source(event_kernel)
                         publisher.upload(events)
 
                     scraper.close()
@@ -99,11 +99,11 @@ if __name__ == "__main__":
         #####################
         # Create Submission #
         #####################
-        google_calendars: [GroupEventsKernel] = get_event_objects(
-            f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/gcal.json", SourceTypes.gCal)
-        farmers_market: [GroupEventsKernel] = get_event_objects(
+        google_calendars: [GroupEventsKernel] = get_group_kernels(
+            f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/gcal.json", ScraperTypes.gCal)
+        farmers_market: [GroupEventsKernel] = get_group_kernels(
             f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/farmers_market.json",
-            SourceTypes.json)
+            ScraperTypes.json)
         cache_db: SQLiteDB = SQLiteDB()
         publishers = {
             MobilizonUploader(True, cache_db): [

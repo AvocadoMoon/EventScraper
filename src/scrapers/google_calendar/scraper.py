@@ -1,12 +1,12 @@
 import logging
 import os
 
-from src.db_cache import SQLiteDB, SourceTypes
-from src.jsonParser import GroupEventsKernel, get_event_objects
+from src.db_cache import SQLiteDB, ScraperTypes
+from src.jsonParser import GroupEventsKernel, get_group_kernels
 from src.logger import logger_name
 from src.publishers.mobilizon.api import logger
 from src.publishers.mobilizon.types import MobilizonEvent
-from src.scrapers.abc_scraper import Scraper, EventsToUploadFromSourceID
+from src.scrapers.abc_scraper import Scraper, EventsToUploadFromCalendarID
 from src.scrapers.google_calendar.api import GCalAPI
 
 
@@ -14,7 +14,7 @@ logger = logging.getLogger(logger_name)
 
 class GoogleCalendarScraper(Scraper):
     def get_source_type(self):
-        return SourceTypes.gCal
+        return ScraperTypes.gCal
 
     google_calendar_api: GCalAPI
     cache_db: SQLiteDB
@@ -35,14 +35,14 @@ class GoogleCalendarScraper(Scraper):
         return events
 
 
-    def retrieve_from_source(self, group_event_kernel: GroupEventsKernel) -> [EventsToUploadFromSourceID]:
+    def retrieve_from_source(self, group_event_kernel: GroupEventsKernel) -> [EventsToUploadFromCalendarID]:
 
 
-        all_events: [EventsToUploadFromSourceID] = []
+        all_events: [EventsToUploadFromCalendarID] = []
         logger.info(f"Getting events from calendar {group_event_kernel.group_name}")
         for google_calendar_id in group_event_kernel.calendar_ids:
             events = self._get_specific_calendar_events(google_calendar_id, group_event_kernel)
-            all_events += EventsToUploadFromSourceID(events, group_event_kernel, google_calendar_id)
+            all_events += EventsToUploadFromCalendarID(events, group_event_kernel, google_calendar_id)
 
         return all_events
 
@@ -51,7 +51,7 @@ class GoogleCalendarScraper(Scraper):
     # Used Mostly for Testing ##
     ############################
     def get_gcal_events_for_specific_group_and_upload_them(self, calendar_group: str):
-        google_calendars: [GroupEventsKernel] = get_event_objects(f"{os.getcwd()}/src/scrapers/GCal.json")
+        google_calendars: [GroupEventsKernel] = get_group_kernels(f"{os.getcwd()}/src/scrapers/GCal.json")
         logger.info(f"Getting events from calendar {calendar_group}")
         gCal: GroupEventsKernel
         all_events: [MobilizonEvent] = []

@@ -1,6 +1,6 @@
 from src.publishers.mobilizon import MobilizonAPI
 from src.publishers.mobilizon import EventParameters, EventType
-from src.db_cache import UploadedEventRow, SQLiteDB, UploadSource, SourceTypes
+from src.db_cache import UploadedEventRow, SQLiteDB, UploadSource, ScraperTypes
 from src.scrapers.google_calendar.api import GCalAPI
 from datetime import timezone, timedelta, datetime
 import json
@@ -71,9 +71,9 @@ def manualTestCacheDB():
         UploadedEventRow("uuid3", "id1", "title1", "2022-05-04T10:00:00-04:00", "2", "group2")
     ]
     eventSources: [UploadSource] = [
-        UploadSource("uuid1", "website", "123", SourceTypes.gCal),
-        UploadSource("uuid5", "website", "123", SourceTypes.gCal),
-        UploadSource("uuid3", "website", "123", SourceTypes.gCal)
+        UploadSource("uuid1", "website", "123", ScraperTypes.gCal),
+        UploadSource("uuid5", "website", "123", ScraperTypes.gCal),
+        UploadSource("uuid3", "website", "123", ScraperTypes.gCal)
     ]
     db = SQLiteDB(True)
     for k in range(len(allEvents)):

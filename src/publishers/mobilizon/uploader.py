@@ -8,7 +8,7 @@ from src.publishers.mobilizon.api import MobilizonAPI
 from src.publishers.mobilizon.types import MobilizonEvent
 import logging
 from src.logger import logger_name
-from src.scrapers.abc_scraper import EventsToUploadFromSourceID
+from src.scrapers.abc_scraper import EventsToUploadFromCalendarID
 
 logger = logging.getLogger(logger_name)
 class MobilizonUploader(Publisher):
@@ -25,11 +25,11 @@ class MobilizonUploader(Publisher):
         if not self.testMode:
             self.mobilizonAPI.logout()
 
-    def upload(self, sources_list: [EventsToUploadFromSourceID]):
+    def upload(self, sources_list: [EventsToUploadFromCalendarID]):
         for events_to_upload in sources_list:
             all_events = events_to_upload.events
             event_kernel = events_to_upload.eventKernel
-            source_id = events_to_upload.source_id
+            source_id = events_to_upload.calendar_id
             for event in all_events:
                 event: MobilizonEvent
                 upload_response: dict = {}
@@ -45,7 +45,7 @@ class MobilizonUploader(Publisher):
                                                   title=event.title, date=event.beginsOn,
                                                   groupID=event.attributedToId, groupName=event_kernel.group_name)
                     upload_source = UploadSource(uuid=upload_response["uuid"], websiteURL=event.onlineAddress,
-                                                 source=source_id, sourceType=event_kernel.sourceType)
+                                                 source=source_id, sourceType=event_kernel.scraper_type)
                     self.cache_db.insertUploadedEvent(upload_row, upload_source)
 
     def connect(self):

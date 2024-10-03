@@ -3,8 +3,8 @@ import unittest
 from math import trunc
 
 from src.Runner import RunnerSubmission, runner
-from src.db_cache import SQLiteDB, SourceTypes
-from src.jsonParser import GroupEventsKernel, get_event_objects
+from src.db_cache import SQLiteDB, ScraperTypes
+from src.jsonParser import GroupEventsKernel, get_group_kernels
 from src.logger import setup_custom_logger
 from src.publishers.mobilizon.uploader import MobilizonUploader
 from src.scrapers.statics.scraper import StaticScraper
@@ -16,9 +16,9 @@ class TestRunner(unittest.TestCase):
     
     def test_Runners_Idempotency(self):
         cache_db: SQLiteDB = SQLiteDB(inMemorySQLite=True)
-        farmers_market: [GroupEventsKernel] = get_event_objects(
+        farmers_market: [GroupEventsKernel] = get_group_kernels(
             f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/farmers_market.json",
-            SourceTypes.json)
+            ScraperTypes.json)
         publishers = {
             MobilizonUploader(True, cache_db): [
                 (StaticScraper(), farmers_market)
