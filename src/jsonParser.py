@@ -13,13 +13,13 @@ logger = logging.getLogger(logger_name)
 
 
 class GroupEventsKernel:
-    template_event: MobilizonEvent
+    event_template: MobilizonEvent
     group_name: str
     calendar_ids: [str]
     sourceType: SourceTypes
     
     def __init__(self, event, group_name, calendar_ids, source_type):
-        self.template_event = event
+        self.event_template = event
         self.calendar_ids = calendar_ids
         self.group_name = group_name
         self.sourceType = source_type
@@ -66,7 +66,7 @@ def generate_events_from_static_event_kernels(json_path: str, event_kernel: Grou
     
     if now.date() <= end_date.date():
         for t in times:
-            event: MobilizonEvent = copy.deepcopy(event_kernel.template_event)
+            event: MobilizonEvent = copy.deepcopy(event_kernel.event_template)
             start_time = datetime.fromisoformat(t[0])
             end_time = datetime.fromisoformat(t[1])
             

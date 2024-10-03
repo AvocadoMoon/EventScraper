@@ -43,7 +43,7 @@ class MobilizonUploader(Publisher):
 
                     upload_row = UploadedEventRow(uuid=upload_response["uuid"], id=upload_response["id"],
                                                   title=event.title, date=event.beginsOn,
-                                                  groupID=event.attributedToId, groupName=event_kernel.group_key)
+                                                  groupID=event.attributedToId, groupName=event_kernel.group_name)
                     upload_source = UploadSource(uuid=upload_response["uuid"], websiteURL=event.onlineAddress,
                                                  source=source_id, sourceType=event_kernel.sourceType)
                     self.cache_db.insertUploadedEvent(upload_row, upload_source)

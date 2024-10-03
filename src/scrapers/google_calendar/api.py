@@ -191,5 +191,5 @@ def _parse_google_location(location:str, defaultLocation: EventParameters.Addres
 
 if __name__ == "__main__":
     gcal = GCalAPI()
-    gcal._initCalendarReadClientBrowser()
+    gcal.init_calendar_read_client_browser()
 

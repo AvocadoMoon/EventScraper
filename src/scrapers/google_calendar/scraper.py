@@ -22,13 +22,13 @@ class GoogleCalendarScraper(Scraper):
         self.google_calendar_api = GCalAPI()
         self.cache_db = cache_db
 
-    def _get_specific_calendar_events(self, google_calendar_id, event_kernel: GroupEventsKernel):
+    def _get_specific_calendar_events(self, google_calendar_id, group_kernel: GroupEventsKernel):
         last_uploaded_event_date = None
         if not self.cache_db.noEntriesWithSourceID(google_calendar_id):
             last_uploaded_event_date = self.cache_db.getLastEventDateForSourceID(google_calendar_id)
 
         events: [MobilizonEvent] = self.google_calendar_api.getAllEventsAWeekFromNow(
-            calendarId=google_calendar_id, eventKernel=event_kernel.event,
+            calendarId=google_calendar_id, eventKernel=group_kernel.event_template,
             checkCacheFunction=self.cache_db.entryAlreadyInCache,
             dateOfLastEventScraped=last_uploaded_event_date)
 
@@ -39,8 +39,8 @@ class GoogleCalendarScraper(Scraper):
 
 
         all_events: [EventsToUploadFromSourceID] = []
-        logger.info(f"Getting events from calendar {group_event_kernel.group_key}")
-        for google_calendar_id in group_event_kernel.event_sourceIDs:
+        logger.info(f"Getting events from calendar {group_event_kernel.group_name}")
+        for google_calendar_id in group_event_kernel.calendar_ids:
             events = self._get_specific_calendar_events(google_calendar_id, group_event_kernel)
             all_events += EventsToUploadFromSourceID(events, group_event_kernel, google_calendar_id)
 
@@ -56,8 +56,8 @@ class GoogleCalendarScraper(Scraper):
         gCal: GroupEventsKernel
         all_events: [MobilizonEvent] = []
         for gCal in google_calendars:
-            if gCal.group_key == calendar_group:
-                for googleCalendarID in gCal.event_sourceIDs:
+            if gCal.group_name == calendar_group:
+                for googleCalendarID in gCal.calendar_ids:
                     all_events += self._get_specific_calendar_events(googleCalendarID, gCal)
         return all_events
 

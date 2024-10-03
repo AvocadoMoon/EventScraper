@@ -20,14 +20,14 @@ class StaticScraper(Scraper):
     def connect_to_source(self):
         pass
 
-    def retrieve_from_source(self, event_kernel: GroupEventsKernel) -> [EventsToUploadFromSourceID]:
+    def retrieve_from_source(self, group_kernel: GroupEventsKernel) -> [EventsToUploadFromSourceID]:
         json_path = "https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/farmers_market.json"
-        logger.info(f"Getting farmer market events for {event_kernel.group_key}")
-        events: [MobilizonEvent] = generate_events_from_static_event_kernels(json_path, event_kernel)
+        logger.info(f"Getting farmer market events for {group_kernel.group_name}")
+        events: [MobilizonEvent] = generate_events_from_static_event_kernels(json_path, group_kernel)
         event: MobilizonEvent
         for event in events:
             event.description = f"Automatically scraped by event bot: \n\n{event.description} \n\n Source for farmer market info: https://portal.ct.gov/doag/adarc/adarc/farmers-market-nutrition-program/authorized-redemption-locations"
-        return [EventsToUploadFromSourceID(events, event_kernel, event_kernel.group_key)]
+        return [EventsToUploadFromSourceID(events, group_kernel, group_kernel.group_name)]
 
     def close(self):
         pass
