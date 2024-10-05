@@ -104,9 +104,10 @@ if __name__ == "__main__":
         farmers_market: [GroupEventsKernel] = get_group_kernels(
             f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/farmers_market.json",
             ScraperTypes.json)
-        cache_db: SQLiteDB = SQLiteDB()
+        test_mode =True
+        cache_db: SQLiteDB = SQLiteDB(test_mode)
         publishers = {
-            MobilizonUploader(True, cache_db): [
+            MobilizonUploader(test_mode, cache_db): [
                 (StaticScraper(), farmers_market),
                 (GoogleCalendarScraper(cache_db), google_calendars)
             ]

@@ -42,13 +42,12 @@ class GCalAPI:
     def __init__(self):
         pass
     
-    def init_calendar_read_client_browser(self):
+    def init_calendar_read_client_browser(self, token_path: str):
         logger.info("Logged in Google Cal Browser")
         SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
         credentialTokens = None
-        credential_token_path = f"{os.getcwd()}/config/token.json"
-        if os.path.exists(credential_token_path):
-            credentialTokens = Credentials.from_authorized_user_file(credential_token_path, SCOPES)
+        if os.path.exists(token_path):
+            credentialTokens = Credentials.from_authorized_user_file(token_path, SCOPES)
         
         if not credentialTokens or not credentialTokens.valid:
             try: 
@@ -61,7 +60,7 @@ class GCalAPI:
                     credentialTokens = flow.run_local_server(port=9000)
                 
                 # When refreshed authentication token needs to be re-written, and if authenticating for the first time it needs to be just written
-                with open(credential_token_path, "w") as tokenFile:
+                with open(token_path, "w") as tokenFile:
                     tokenFile.write(credentialTokens.to_json())
             except Exception:
                 raise ExpiredToken
@@ -191,5 +190,6 @@ def _parse_google_location(location:str, defaultLocation: EventParameters.Addres
 
 if __name__ == "__main__":
     gcal = GCalAPI()
-    gcal.init_calendar_read_client_browser()
+    google_token_path = os.environ.get("GOOGLE_API_TOKEN_PATH")
+    gcal.init_calendar_read_client_browser(google_token_path)
 
