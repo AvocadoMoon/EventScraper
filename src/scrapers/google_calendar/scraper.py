@@ -52,7 +52,7 @@ class GoogleCalendarScraper(Scraper):
     ############################
     def get_gcal_events_for_specific_group_and_upload_them(self, calendar_group: str):
         google_calendars: [GroupEventsKernel] = get_group_kernels(f"{os.getcwd()}/src/scrapers/GCal.json")
-        logger.info(f"Getting events from calendar {calendar_group}")
+        logger.info(f"\nGetting events from calendar {calendar_group}")
         gCal: GroupEventsKernel
         all_events: [MobilizonEvent] = []
         for gCal in google_calendars:

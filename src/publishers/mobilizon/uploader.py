@@ -25,8 +25,8 @@ class MobilizonUploader(Publisher):
         if not self.testMode:
             self.mobilizonAPI.logout()
 
-    def upload(self, sources_list: [EventsToUploadFromCalendarID]):
-        for events_to_upload in sources_list:
+    def upload(self, groups_events_to_upload: [EventsToUploadFromCalendarID]):
+        for events_to_upload in groups_events_to_upload:
             all_events = events_to_upload.events
             event_kernel = events_to_upload.eventKernel
             source_id = events_to_upload.calendar_id
@@ -39,7 +39,7 @@ class MobilizonUploader(Publisher):
                         upload_response = {"id": 1, "uuid": self.fakeUUIDForTests}
                     else:
                         upload_response = self.mobilizonAPI.bot_created_event(event)
-                    logger.info(f"{upload_response}")
+                    logger.info(f"{event.title}: {upload_response}")
 
                     upload_row = UploadedEventRow(uuid=upload_response["uuid"], id=upload_response["id"],
                                                   title=event.title, date=event.beginsOn,

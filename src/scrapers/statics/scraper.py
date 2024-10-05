@@ -27,7 +27,7 @@ class StaticScraper(Scraper):
 
     def retrieve_from_source(self, group_kernel: GroupEventsKernel) -> [EventsToUploadFromCalendarID]:
         json_path = group_kernel.json_source_url
-        logger.info(f"Getting farmer market events for {group_kernel.group_name}")
+        logger.info(f"\nGetting farmer market events for {group_kernel.group_name}")
         events: [MobilizonEvent] = hydrate_event_template_with_legitimate_times(json_path, group_kernel)
         event: MobilizonEvent
         for event in events:
