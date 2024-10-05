@@ -42,7 +42,7 @@ class GoogleCalendarScraper(Scraper):
         logger.info(f"Getting events from calendar {group_event_kernel.group_name}")
         for google_calendar_id in group_event_kernel.calendar_ids:
             events = self._get_specific_calendar_events(google_calendar_id, group_event_kernel)
-            all_events += EventsToUploadFromCalendarID(events, group_event_kernel, google_calendar_id)
+            all_events.append(EventsToUploadFromCalendarID(events, group_event_kernel, google_calendar_id))
 
         return all_events
 
