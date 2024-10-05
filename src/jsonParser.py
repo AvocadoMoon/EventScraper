@@ -38,7 +38,6 @@ def get_group_kernels(json_path: str, scraper_type: ScraperTypes) -> [GroupEvent
     all_group_kernels: [GroupEventsKernel] = []
     for group_name, group_info in group_schema.items():
 
-        print(group_info["publisherInfo"])
         mobilizon_metadata = group_info["publisherInfo"]["mobilizon"]
 
         event_address = None if "defaultLocation" not in group_info else EventParameters.Address(**group_info["defaultLocation"])

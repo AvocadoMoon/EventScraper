@@ -24,12 +24,12 @@ class GoogleCalendarScraper(Scraper):
 
     def _get_specific_calendar_events(self, google_calendar_id, group_kernel: GroupEventsKernel):
         last_uploaded_event_date = None
-        if not self.cache_db.noEntriesWithSourceID(google_calendar_id):
-            last_uploaded_event_date = self.cache_db.getLastEventDateForSourceID(google_calendar_id)
+        if not self.cache_db.no_entries_with_source_id(google_calendar_id):
+            last_uploaded_event_date = self.cache_db.get_last_event_date_for_source_id(google_calendar_id)
 
         events: [MobilizonEvent] = self.google_calendar_api.getAllEventsAWeekFromNow(
             calendarId=google_calendar_id, eventKernel=group_kernel.event_template,
-            checkCacheFunction=self.cache_db.entryAlreadyInCache,
+            checkCacheFunction=self.cache_db.entry_already_in_cache,
             dateOfLastEventScraped=last_uploaded_event_date)
 
         return events
@@ -67,7 +67,8 @@ class GoogleCalendarScraper(Scraper):
     def connect_to_source(self):
         use_oidc = os.environ.get("USE_OIDC_TOKEN")
         if use_oidc:
-            self.google_calendar_api.init_calendar_read_client_browser()
+            token_path = f"{os.getcwd()}/config/token.json" if "GOOGLE_API_TOKEN_PATH" not in os.environ else os.environ.get("GOOGLE_API_TOKEN_PATH")
+            self.google_calendar_api.init_calendar_read_client_browser(token_path)
         else:
             self.google_calendar_api.init_calendar_read_client_adc()
 

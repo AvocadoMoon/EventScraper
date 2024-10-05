@@ -15,7 +15,7 @@ from src.scrapers.statics.scraper import StaticScraper
 class TestRunner(unittest.TestCase):
     
     def test_Runners_Idempotency(self):
-        cache_db: SQLiteDB = SQLiteDB(inMemorySQLite=True)
+        cache_db: SQLiteDB = SQLiteDB(in_memory_sq_lite=True)
         farmers_market: [GroupEventsKernel] = get_group_kernels(
             f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/farmers_market.json",
             ScraperTypes.json)
@@ -28,10 +28,10 @@ class TestRunner(unittest.TestCase):
 
 
         runner(submission)
-        db_results = cache_db.selectAllFromUploadTable().fetchall()
+        db_results = cache_db.select_all_from_upload_table().fetchall()
         
         runner(submission)
-        second_db_results = cache_db.selectAllFromUploadTable().fetchall()
+        second_db_results = cache_db.select_all_from_upload_table().fetchall()
             
         self.assertEqual(len(db_results), len(second_db_results))
         

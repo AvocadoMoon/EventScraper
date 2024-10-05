@@ -55,7 +55,7 @@ def manualTestGoogleCalendar(printEvents:bool = False):
     db = SQLiteDB(True)
     allEvents = google_calendar_api.getAllEventsAWeekFromNow(
         calendarDict=bsbco, calendarId=bsbco["googleIDs"][0], 
-        checkCacheFunction=db.entryAlreadyInCache)
+        checkCacheFunction=db.entry_already_in_cache)
     
     if(printEvents):
         for event in allEvents:
@@ -77,9 +77,9 @@ def manualTestCacheDB():
     ]
     db = SQLiteDB(True)
     for k in range(len(allEvents)):
-        db.insertUploadedEvent(allEvents[k], eventSources[k])
+        db.insert_uploaded_event(allEvents[k], eventSources[k])
     # print(db.selectAllFromTable().fetchall())
-    print(db.getLastEventDateForSourceID("123").isoformat())
+    print(db.get_last_event_date_for_source_id("123").isoformat())
     db.close()
 
 def getEventBotInfo():

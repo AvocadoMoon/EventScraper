@@ -33,7 +33,7 @@ class MobilizonUploader(Publisher):
             for event in all_events:
                 event: MobilizonEvent
                 upload_response: dict = {}
-                if not self.cache_db.entryAlreadyInCache(event.beginsOn, event.title, source_id):
+                if not self.cache_db.entry_already_in_cache(event.beginsOn, event.title, source_id):
                     if self.testMode:
                         self.fakeUUIDForTests += 1
                         upload_response = {"id": 1, "uuid": self.fakeUUIDForTests}
@@ -43,10 +43,10 @@ class MobilizonUploader(Publisher):
 
                     upload_row = UploadedEventRow(uuid=upload_response["uuid"], id=upload_response["id"],
                                                   title=event.title, date=event.beginsOn,
-                                                  groupID=event.attributedToId, groupName=event_kernel.group_name)
-                    upload_source = UploadSource(uuid=upload_response["uuid"], websiteURL=event.onlineAddress,
-                                                 source=source_id, sourceType=event_kernel.scraper_type)
-                    self.cache_db.insertUploadedEvent(upload_row, upload_source)
+                                                  group_id=event.attributedToId, group_name=event_kernel.group_name)
+                    upload_source = UploadSource(uuid=upload_response["uuid"], website_url=event.onlineAddress,
+                                                 source=source_id, source_type=event_kernel.scraper_type)
+                    self.cache_db.insert_uploaded_event(upload_row, upload_source)
 
     def connect(self):
         if not self.testMode:
