@@ -5,7 +5,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build, Resource
 from googleapiclient.errors import HttpError
 from datetime import datetime, timedelta
-from src.mobilizon.mobilizon_types import EventType, EventParameters
+from src.publishers.mobilizon.types import MobilizonEvent, EventParameters
 import os
 import logging
 from geopy.geocoders import Nominatim
@@ -40,19 +40,14 @@ class GCalAPI:
     _apiClient: Resource
     
     def __init__(self):
-        use_oidc = os.environ.get("USE_OIDC_TOKEN")
-        if use_oidc:
-            self._initCalendarReadClientBrowser()
-        else:
-            self._initCalendarReadClientADC()
+        pass
     
-    def _initCalendarReadClientBrowser(self):
+    def init_calendar_read_client_browser(self, token_path: str):
         logger.info("Logged in Google Cal Browser")
         SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
         credentialTokens = None
-        credential_token_path = f"{os.getcwd()}/config/token.json"
-        if os.path.exists(credential_token_path):
-            credentialTokens = Credentials.from_authorized_user_file(credential_token_path, SCOPES)
+        if os.path.exists(token_path):
+            credentialTokens = Credentials.from_authorized_user_file(token_path, SCOPES)
         
         if not credentialTokens or not credentialTokens.valid:
             try: 
@@ -65,23 +60,23 @@ class GCalAPI:
                     credentialTokens = flow.run_local_server(port=9000)
                 
                 # When refreshed authentication token needs to be re-written, and if authenticating for the first time it needs to be just written
-                with open(credential_token_path, "w") as tokenFile:
+                with open(token_path, "w") as tokenFile:
                     tokenFile.write(credentialTokens.to_json())
             except Exception:
                 raise ExpiredToken
         self._apiClient = build("calendar", "v3", credentials=credentialTokens)
 
     
-    def _initCalendarReadClientADC(self):
+    def init_calendar_read_client_adc(self):
         logger.info("Logged In Google Cal ADC")
         credentials, projectID = google.auth.default()
         
         self._apiClient = build("calendar", "v3", credentials=credentials)
     
 
-    def getAllEventsAWeekFromNow(self, eventKernel: EventType, calendarId: str, 
-                                 checkCacheFunction, 
-                                 dateOfLastEventScraped: datetime = None) -> [EventType]:
+    def getAllEventsAWeekFromNow(self, eventKernel: MobilizonEvent, calendarId: str,
+                                 checkCacheFunction,
+                                 dateOfLastEventScraped: datetime = None) -> [MobilizonEvent]:
         """Get events all events for that specific calender a week from today.
 
         Args:
@@ -144,7 +139,7 @@ def _process_google_event(googleEvent: dict, eventsToUpload: [], checkCacheForEv
         startDateTime = datetime.fromisoformat(starTimeGoogleEvent.replace('Z', '+00:00')).astimezone()
         endDateTime = datetime.fromisoformat(endTimeGooglEvent.replace('Z', '+00:00')).astimezone()
         if not checkCacheForEvent(startDateTime.isoformat(), title, calendarId):
-            eventAddress = _parse_google_location(googleEvent.get("location"), eventKernel.physicalAddress)
+            eventAddress = _parse_google_location(googleEvent.get("location"), eventKernel.physicalAddress, title)
             eventKernel.beginsOn = startDateTime.isoformat()
             eventKernel.endsOn = endDateTime.isoformat()
             eventKernel.physicalAddress = eventAddress
@@ -153,19 +148,19 @@ def _process_google_event(googleEvent: dict, eventsToUpload: [], checkCacheForEv
             eventsToUpload.append(eventKernel)
             
 
-def _parse_google_location(location:str, defaultLocation: EventParameters.Address):
-    if location is None and defaultLocation is not None:
+def _parse_google_location(location:str, default_location: EventParameters.Address, event_title: str):
+    if location is None and default_location is not None:
         logger.debug("No location provided, using default")
-        return defaultLocation
+        return default_location
     if location is None:
         return None
     tokens = location.split(",")
     address: EventParameters.Address = None
     match len(tokens):
         case 1:
-            return defaultLocation
+            return default_location
         case 2:
-            return defaultLocation
+            return default_location
         case 3:
             address = EventParameters.Address(locality=tokens[0], postalCode=tokens[1], street="", country=tokens[2])
         case 4:
@@ -176,10 +171,10 @@ def _parse_google_location(location:str, defaultLocation: EventParameters.Addres
             return None
 
     # Address given is default, so don't need to call Nominatim
-    if (defaultLocation is not None and defaultLocation.locality in location 
-        and defaultLocation.street in location and defaultLocation.postalCode in location):
-        logger.debug("Location included with calendar, but is same as default location.")
-        return defaultLocation
+    if (default_location is not None and default_location.locality in location
+        and default_location.street in location and default_location.postalCode in location):
+        logger.debug(f"{event_title} location included with calendar, but is same as default location.")
+        return default_location
     
     try:
         geo_locator = Nominatim(user_agent="Mobilizon Event Bot", timeout=10)
@@ -187,7 +182,7 @@ def _parse_google_location(location:str, defaultLocation: EventParameters.Addres
         if geo_code_location is None:
             return None
         address.geom = f"{geo_code_location.longitude};{geo_code_location.latitude}"
-        logger.info(f"Outsourced location info. Outsourced location was {address.street}, {address.locality}")
+        logger.info(f"{event_title}: Outsourced location was {address.street}, {address.locality}")
         return address
     except GeocoderTimedOut:
         return None
@@ -195,5 +190,6 @@ def _parse_google_location(location:str, defaultLocation: EventParameters.Addres
 
 if __name__ == "__main__":
     gcal = GCalAPI()
-    gcal._initCalendarReadClientBrowser()
+    google_token_path = os.environ.get("GOOGLE_API_TOKEN_PATH")
+    gcal.init_calendar_read_client_browser(google_token_path)
 

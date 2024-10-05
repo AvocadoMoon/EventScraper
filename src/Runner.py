@@ -1,154 +1,77 @@
-from src.db_cache import SQLiteDB, UploadedEventRow, UploadSource, SourceTypes
-from src.mobilizon.mobilizon import MobilizonAPI
-from src.mobilizon.mobilizon_types import EventType, _generate_args
-from src.scrapers.google_calendar.api import GCalAPI, ExpiredToken
-import json
-import os
+import datetime
 import logging
-from src.logger import logger_name, setup_custom_logger
-from src.jsonParser import getEventObjects, EventKernel, generateEventsFromStaticEventKernels
+import os
+import time
+
 from requests.exceptions import HTTPError
 from slack_sdk.webhook import WebhookClient
-from pydantic import BaseModel
-import time
-import datetime
+
+from src.db_cache import SQLiteDB, ScraperTypes
+from src.jsonParser import GroupEventsKernel, get_group_kernels
+from src.logger import logger_name, setup_custom_logger
+from src.publishers.abc_publisher import Publisher
+from src.publishers.mobilizon.uploader import MobilizonUploader
+from src.scrapers.abc_scraper import Scraper, EventsToUploadFromCalendarID
+from src.scrapers.google_calendar.api import ExpiredToken
+from src.scrapers.google_calendar.scraper import GoogleCalendarScraper
+from src.scrapers.statics.scraper import StaticScraper
 
 logger = logging.getLogger(logger_name)
 
-
-class Runner:
-    mobilizonAPI: MobilizonAPI
-    cache_db: SQLiteDB
-    testMode: bool
-    fakeUUIDForTests = 0
-    google_calendar_api: GCalAPI
-    
-    def __init__(self, testMode:bool = False):
-        secrets = None
-        endpoint = os.environ.get("MOBILIZON_ENDPOINT")
-        email = os.environ.get("MOBILIZON_EMAIL")
-        passwd = os.environ.get("MOBILIZON_PASSWORD")
-        
-        if email is None and passwd is None:
-            loginFilePath = os.environ.get("MOBILIZON_LOGIN_FILE")
-            with open(loginFilePath, "r") as f:
-                secrets = json.load(f)
-                email = secrets["email"]
-                passwd = secrets["password"]
-        
-        self.mobilizonAPI = MobilizonAPI(endpoint, email, passwd)
-        if testMode:
-            self.cache_db = SQLiteDB(inMemorySQLite=True)
-        else:
-            self.cache_db = SQLiteDB()
-        self.testMode = testMode
-        self.google_calendar_api = GCalAPI()
+class RunnerSubmission:
+    def __init__(self, submitted_db: SQLiteDB,
+                 submitted_publishers: {Publisher: [(Scraper, [GroupEventsKernel])]},
+                 test: bool):
+        self.cache_db = submitted_db
+        self.test = test
+        self.publishers = submitted_publishers
 
 
-    def _uploadEvent(self, event: EventType, eventKernel: EventKernel, sourceID):
-        event: EventType
-        uploadResponse: dict = None
-        if not self.cache_db.entryAlreadyInCache(event.beginsOn, event.title, sourceID):
-            if self.testMode:
-                self.fakeUUIDForTests += 1
-                uploadResponse = {"id": 1, "uuid": self.fakeUUIDForTests}
-            else:
-                uploadResponse = self.mobilizonAPI.bot_created_event(event)
-            logger.info(f"{uploadResponse}")            
-            self.cache_db.insertUploadedEvent(UploadedEventRow(uuid=uploadResponse["uuid"],
-                                                id=uploadResponse["id"],
-                                                title=event.title,
-                                                date=event.beginsOn,
-                                                groupID=event.attributedToId,
-                                                groupName=eventKernel.eventKernelKey),
-                                                UploadSource(uuid=uploadResponse["uuid"],
-                                                            websiteURL=event.onlineAddress,
-                                                            source=sourceID,
-                                                            sourceType=eventKernel.sourceType))
 
-    def _uploadEventsRetrievedFromCalendarID(self, google_calendar_id, eventKernel: EventKernel):
-        lastUploadedEventDate = None
-        if not self.cache_db.noEntriesWithSourceID(google_calendar_id):
-            lastUploadedEventDate = self.cache_db.getLastEventDateForSourceID(google_calendar_id)
-        
-        events: [EventType] = self.google_calendar_api.getAllEventsAWeekFromNow(
-            calendarId=google_calendar_id, eventKernel=eventKernel.event, 
-            checkCacheFunction=self.cache_db.entryAlreadyInCache,
-            dateOfLastEventScraped=lastUploadedEventDate)
-        if (len(events) == 0):
-            return
-        for event in events:
-            self._uploadEvent(event, eventKernel, google_calendar_id)
+def runner(runner_submission: RunnerSubmission):
+    continue_scraping = True
+    num_retries = 0
 
-    def getGCalEventsAndUploadThem(self):
-        google_calendars: [EventKernel] = getEventObjects(f"{os.getcwd()}/src/scrapers/google_calendar/GCal.json", SourceTypes.gCal)
-
-        eventKernel: EventKernel
-        for eventKernel in google_calendars:
-            logger.info(f"Getting events from calendar {eventKernel.eventKernelKey}")
-            for google_calendar_id in eventKernel.sourceIDs:
-                self._uploadEventsRetrievedFromCalendarID(google_calendar_id, eventKernel)
-    
-    def getGCalEventsForSpecificGroupAndUploadThem(self, calendarGroup: str):
-        google_calendars: [EventKernel] = getEventObjects(f"{os.getcwd()}/src/scrapers/GCal.json")
-        logger.info(f"Getting events from calendar {calendarGroup}")
-        gCal: EventKernel
-        for gCal in google_calendars:
-            if gCal.eventKernelKey == calendarGroup:
-                for googleCalendarID in gCal.sourceIDs:
-                    self._uploadEventsRetrievedFromCalendarID(googleCalendarID, gCal)
-    
-    def getFarmerMarketsAndUploadThem(self):
-        jsonPath = f"{os.getcwd()}/src/scrapers/statics/farmerMarkets.json"
-        eventKernels: [EventKernel] = getEventObjects(jsonPath, SourceTypes.json)
-        
-        eventKernel: EventKernel
-        for eventKernel in eventKernels:
-            logger.info(f"Getting farmer market events for {eventKernel.eventKernelKey}")
-            events: [EventType] = generateEventsFromStaticEventKernels(jsonPath, eventKernel)
-            event: EventType
-            for event in events:
-                event.description = f"Automatically scraped by event bot: \n\n{event.description} \n\n Source for farmer market info: https://portal.ct.gov/doag/adarc/adarc/farmers-market-nutrition-program/authorized-redemption-locations"
-                self._uploadEvent(event, eventKernel, eventKernel.sourceIDs[0])
-    
-    def cleanUp(self):
-        self.mobilizonAPI.logout()
-        self.cache_db.close()
-        self.google_calendar_api.close()
-
-
-def runner():
-    continueScraping = True
-    numRetries = 0
-    runner = None
-    while continueScraping and numRetries < 5:
+    while continue_scraping and num_retries < 5:
         try:
-            runner = Runner()
-            runner.getGCalEventsAndUploadThem()
-            runner.getFarmerMarketsAndUploadThem()
-            runner.cleanUp()
-            continueScraping = False
+            submitted_publishers: {Publisher: [(Scraper, [GroupEventsKernel])]} = runner_submission.publishers
+            for publisher in submitted_publishers.keys():
+                publisher: Publisher
+                publisher.connect()
+                scraper_and_kernel_list = submitted_publishers[publisher]
+                for scraper_and_kernels in scraper_and_kernel_list:
+                    scraper: Scraper = scraper_and_kernels[0]
+                    scraper.connect_to_source()
+                    event_kernels: [GroupEventsKernel] = scraper_and_kernels[1]
+
+                    for event_kernel in event_kernels:
+                        events: [EventsToUploadFromCalendarID] = scraper.retrieve_from_source(event_kernel)
+                        publisher.upload(events)
+
+                    scraper.close()
+                publisher.close()
+
+            continue_scraping = False
         except HTTPError as err:
             if err.response.status_code == 500 and err.response.message == 'Too many requests':
-                runner.cleanUp()
-                numRetries += 1
-                logger.warning("Going to sleep then retrying to scrape. Retry Num: " + numRetries)
+                num_retries += 1
+                logger.warning("Going to sleep then retrying to scrape. Retry Num: " + num_retries)
                 time.sleep(120)
 
-def daysToSleep(days):
+def days_to_sleep(days):
     now = datetime.datetime.now()
-    secondsFromZero = (now.hour * 60 * 60)
-    timeAt2AM = 2 * 60 * 60
-    timeToSleep = timeAt2AM
-    if secondsFromZero > timeAt2AM:
-        timeToSleep = ((23 * 60 * 60) - secondsFromZero) + timeAt2AM
+    seconds_from_zero = (now.hour * 60 * 60)
+    time_at_2am = 2 * 60 * 60
+    time_to_sleep = time_at_2am
+    if seconds_from_zero > time_at_2am:
+        time_to_sleep = ((23 * 60 * 60) - seconds_from_zero) + time_at_2am
     else:
-        timeToSleep = timeAt2AM - secondsFromZero
+        time_to_sleep = time_at_2am - seconds_from_zero
     
-    return timeToSleep + (60 * 60 * 24 * days)
+    return time_to_sleep + (60 * 60 * 24 * days)
 
 
-def produceSlackMessage(color, title, text, priority):
+def produce_slack_message(color, title, text, priority):
     return {
             "color": color,
             "author_name": "CTEvent Scraper",
@@ -173,18 +96,38 @@ if __name__ == "__main__":
     sleeping = 2
     webhook = WebhookClient(os.environ.get("SLACK_WEBHOOK"))
     while True:
-        
-        timeToSleep = daysToSleep(sleeping)
+        #####################
+        # Create Submission #
+        #####################
+        google_calendars: [GroupEventsKernel] = get_group_kernels(
+            f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/gcal.json", ScraperTypes.gCal)
+        farmers_market: [GroupEventsKernel] = get_group_kernels(
+            f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/farmers_market.json",
+            ScraperTypes.json)
+        test_mode = False if "TEST_MODE" not in os.environ else True
+        cache_db: SQLiteDB = SQLiteDB(test_mode)
+        publishers = {
+            MobilizonUploader(test_mode, cache_db): [
+                (StaticScraper(), farmers_market),
+                (GoogleCalendarScraper(cache_db), google_calendars)
+            ]
+        }
+        submission: RunnerSubmission = RunnerSubmission(cache_db, publishers, False)
+
+        ######################
+        # Execute Submission #
+        ######################
+        timeToSleep = days_to_sleep(sleeping)
         logger.info("Scraping")
         try:
-            runner()
+            runner(submission)
             logger.info("Sleeping " + str(sleeping) + " Days Until Next Scrape")
         except ExpiredToken:
             logger.warning("Expired token.json needs to be replaced")
-            timeToSleep = daysToSleep(1)
+            timeToSleep = days_to_sleep(1)
             logger.warning("Sleeping only 1 day")
             response = webhook.send(attachments=[
-                produceSlackMessage("#e6e209", "Expired Token", "Replace token.json", "Medium")
+                produce_slack_message("#e6e209", "Expired Token", "Replace token.json", "Medium")
             ])
         
         except Exception as e:
@@ -192,10 +135,11 @@ if __name__ == "__main__":
             logger.error(e)
             logger.error("Going to Sleep for 7 days")
             webhook.send(attachments=[
-                produceSlackMessage("#ab1a13", "Event Scraper Unknown Error", "Check logs for error.", "High")
+                produce_slack_message("#ab1a13", "Event Scraper Unknown Error", "Check logs for error.", "High")
             ])
-            timeToSleep = daysToSleep(7)
-        
+            timeToSleep = days_to_sleep(7)
+
+        cache_db.close()
         time.sleep(timeToSleep)
     
     logger.info("Scraper Stopped")
