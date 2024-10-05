@@ -1,8 +1,10 @@
 import json
 import logging
+import urllib.request
+
 from src.logger import logger_name
-from src.mobilizon.mobilizon_types import EventType, EventParameters
-from src.db_cache import SourceTypes
+from src.publishers.mobilizon.types import MobilizonEvent, EventParameters
+from src.db_cache import ScraperTypes
 from datetime import datetime, timedelta
 import copy
 
@@ -10,85 +12,48 @@ logger = logging.getLogger(logger_name)
 
 
 
-class EventKernel:
-    event: EventType
-    eventKernelKey: str
-    sourceIDs: [str]
-    sourceType: SourceTypes
+class GroupEventsKernel:
+    event_template: MobilizonEvent
+    group_name: str
+    calendar_ids: [str]
+    scraper_type: ScraperTypes
+    json_source_url: str
     
-    def __init__(self, event, eventKey, sourceIDs, sourceType):
-        self.event = event
-        self.sourceIDs = sourceIDs
-        self.eventKernelKey = eventKey
-        self.sourceType = sourceType
+    def __init__(self, event, group_name, calendar_ids, scraper_type, json_source_url):
+        self.event_template = event
+        self.calendar_ids = calendar_ids
+        self.group_name = group_name
+        self.scraper_type = scraper_type
+        self.json_source_url = json_source_url
 
 
+def none_if_not_present(x, dictionary):
+    return None if x not in dictionary else dictionary[x]
 
+def get_group_kernels(json_path: str, scraper_type: ScraperTypes) -> [GroupEventsKernel]:
+    group_schema: dict = None
+    with urllib.request.urlopen(json_path) as f:
+        group_schema = json.load(f)
+    
+    all_group_kernels: [GroupEventsKernel] = []
+    for group_name, group_info in group_schema.items():
 
-def getEventObjects(jsonPath: str, sourceType: SourceTypes) -> [EventKernel]:
-    eventSchema: dict = None
-    with open(jsonPath, "r") as f:
-        eventSchema = json.load(f)
-    
-    eventKernels: [EventKernel] = []
-    for key, event in eventSchema.items():
-        def noneIfNotPresent(x):
-            return None if x not in event else event[x]
-        
-        
-        eventAddress = None if "defaultLocation" not in event else EventParameters.Address(**event["defaultLocation"])
-        category = None if "defaultCategory" not in event else EventParameters.Categories[event["defaultCategory"]]
-        eventKernel = EventType(event["groupID"], noneIfNotPresent("title"), 
-                            noneIfNotPresent("defaultDescription"), noneIfNotPresent("beginsOn"),
-                            event["onlineAddress"], noneIfNotPresent("endsOn"), 
-                            eventAddress, category, 
-                            noneIfNotPresent("defaultTags"), EventParameters.MediaInput(event["defaultImageID"]))
+        mobilizon_metadata = group_info["publisherInfo"]["mobilizon"]
 
-        sourceIDs = noneIfNotPresent("sourceIDs")
-        eventKernels.append(EventKernel(eventKernel, key, sourceIDs=sourceIDs, sourceType=sourceType))
-    
-    return eventKernels
+        event_address = None if "defaultLocation" not in group_info else EventParameters.Address(**group_info["defaultLocation"])
+        category = None if "defaultCategory" not in mobilizon_metadata else EventParameters.Categories[mobilizon_metadata["defaultCategory"]]
+        event_kernel = MobilizonEvent(mobilizon_metadata["groupID"], none_if_not_present("title", group_info),
+                                     none_if_not_present("defaultDescription", group_info), none_if_not_present("beginsOn", group_info),
+                                     group_info["onlineAddress"], none_if_not_present("endsOn", group_info),
+                                     event_address, category,
+                                     none_if_not_present("defaultTags", mobilizon_metadata), EventParameters.MediaInput(mobilizon_metadata["defaultImageID"]))
 
-def generateEventsFromStaticEventKernels(jsonPath: str, eventKernel: EventKernel) -> [EventType]:
-    eventSchema: dict = None
-    with open(jsonPath, "r") as f:
-        eventSchema = json.load(f)
+        calendar_ids = group_info["calendarIDs"]
+
+        all_group_kernels.append(GroupEventsKernel(event_kernel, group_name, calendar_ids=calendar_ids, scraper_type=scraper_type, json_source_url=json_path))
     
-    times = eventSchema[eventKernel.eventKernelKey]["defaultTimes"]
-    
-    generatedEvents = []
-    
-    # startDate = datetime.fromisoformat(eventSchema[eventKernel.eventKernelKey]["startDate"])
-    endDate = datetime.fromisoformat(eventSchema[eventKernel.eventKernelKey]["endDate"])
-    now = datetime.utcnow().astimezone()
-    
-    if now.date() <= endDate.date():
-        for t in times:
-            event: EventType = copy.deepcopy(eventKernel.event)
-            startTime = datetime.fromisoformat(t[0])
-            endTime = datetime.fromisoformat(t[1])
-            
-            timeDifferenceWeeks = (now - startTime).days // 7 # Floor division that can result in week prior event
-            
-            startTime += timedelta(weeks=timeDifferenceWeeks)
-            endTime += timedelta(weeks=timeDifferenceWeeks)
-            
-            if startTime < now:
-                startTime += timedelta(weeks=1)
-                endTime += timedelta(weeks=1)
-                if startTime > endDate:
-                    return []
-            
-            event.beginsOn = startTime.astimezone().isoformat()
-            event.endsOn = endTime.astimezone().isoformat()
-        
-            generatedEvents.append(event)
-        
-        return generatedEvents
-    
-    logger.info(f"Static Event {eventKernel.eventKernelKey} Has Expired")
-    return []
-    
+    return all_group_kernels
+
     
 
 
