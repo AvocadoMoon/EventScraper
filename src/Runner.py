@@ -104,7 +104,7 @@ if __name__ == "__main__":
         farmers_market: [GroupEventsKernel] = get_group_kernels(
             f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/farmers_market.json",
             ScraperTypes.json)
-        test_mode =True
+        test_mode = False if "TEST_MODE" not in os.environ else True
         cache_db: SQLiteDB = SQLiteDB(test_mode)
         publishers = {
             MobilizonUploader(test_mode, cache_db): [
