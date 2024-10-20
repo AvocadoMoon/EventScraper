@@ -2,11 +2,11 @@ import logging
 import os
 
 from src.db_cache import SQLiteDB, ScraperTypes
-from src.jsonParser import GroupEventsKernel, get_group_kernels
+from src.jsonParser import get_group_kernels
 from src.logger import logger_name
 from src.publishers.mobilizon.api import logger
 from src.publishers.mobilizon.types import MobilizonEvent
-from src.scrapers.abc_scraper import Scraper, EventsToUploadFromCalendarID
+from src.scrapers.abc_scraper import Scraper, EventsToUploadFromCalendarID, GroupEventsKernel
 from src.scrapers.google_calendar.api import GCalAPI
 
 
@@ -17,10 +17,9 @@ class GoogleCalendarScraper(Scraper):
         return ScraperTypes.gCal
 
     google_calendar_api: GCalAPI
-    cache_db: SQLiteDB
     def __init__(self, cache_db: SQLiteDB):
+        super().__init__(cache_db)
         self.google_calendar_api = GCalAPI()
-        self.cache_db = cache_db
 
     def _get_specific_calendar_events(self, google_calendar_id, group_kernel: GroupEventsKernel):
         last_uploaded_event_date = None

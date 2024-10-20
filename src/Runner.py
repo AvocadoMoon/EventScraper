@@ -7,11 +7,11 @@ from requests.exceptions import HTTPError
 from slack_sdk.webhook import WebhookClient
 
 from src.db_cache import SQLiteDB, ScraperTypes
-from src.jsonParser import GroupEventsKernel, get_group_kernels
+from src.jsonParser import get_group_kernels, get_scrapers_and_publishers
 from src.logger import logger_name, setup_custom_logger
 from src.publishers.abc_publisher import Publisher
 from src.publishers.mobilizon.uploader import MobilizonUploader
-from src.scrapers.abc_scraper import Scraper, EventsToUploadFromCalendarID
+from src.scrapers.abc_scraper import Scraper, EventsToUploadFromCalendarID, GroupEventsKernel
 from src.scrapers.google_calendar.api import ExpiredToken
 from src.scrapers.google_calendar.scraper import GoogleCalendarScraper
 from src.scrapers.statics.scraper import StaticScraper
@@ -99,19 +99,10 @@ if __name__ == "__main__":
         #####################
         # Create Submission #
         #####################
-        google_calendars: [GroupEventsKernel] = get_group_kernels(
-            f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/gcal.json", ScraperTypes.gCal)
-        farmers_market: [GroupEventsKernel] = get_group_kernels(
-            f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/farmers_market.json",
-            ScraperTypes.json)
+
         test_mode = False if "TEST_MODE" not in os.environ else True
         cache_db: SQLiteDB = SQLiteDB(test_mode)
-        publishers = {
-            MobilizonUploader(test_mode, cache_db): [
-                (StaticScraper(), farmers_market),
-                (GoogleCalendarScraper(cache_db), google_calendars)
-            ]
-        }
+        publishers = get_scrapers_and_publishers(test_mode, cache_db)
         submission: RunnerSubmission = RunnerSubmission(cache_db, publishers, False)
 
         ######################

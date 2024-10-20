@@ -7,10 +7,10 @@ import urllib.request
 from datetime import datetime, timedelta
 
 from src.db_cache import ScraperTypes
-from src.jsonParser import GroupEventsKernel, get_group_kernels
+from src.jsonParser import get_group_kernels
 from src.logger import logger_name
 from src.publishers.mobilizon.types import MobilizonEvent
-from src.scrapers.abc_scraper import Scraper, EventsToUploadFromCalendarID
+from src.scrapers.abc_scraper import Scraper, EventsToUploadFromCalendarID, GroupEventsKernel
 
 logger = logging.getLogger(logger_name)
 

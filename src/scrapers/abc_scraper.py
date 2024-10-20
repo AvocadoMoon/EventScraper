@@ -1,8 +1,7 @@
 
 from abc import ABC, abstractmethod
 
-
-from src.jsonParser import GroupEventsKernel
+from src.db_cache import ScraperTypes, SQLiteDB
 from src.publishers.mobilizon.types import MobilizonEvent
 
 def _generate_args(localVariables: dict) -> dict:
@@ -13,7 +12,27 @@ def _generate_args(localVariables: dict) -> dict:
     return args
 
 
+class GroupEventsKernel:
+    event_template: MobilizonEvent
+    group_name: str
+    calendar_ids: [str]
+    scraper_type: ScraperTypes
+    json_source_url: str
 
+    def __init__(self, event, group_name, calendar_ids, scraper_type, json_source_url):
+        self.event_template = event
+        self.calendar_ids = calendar_ids
+        self.group_name = group_name
+        self.scraper_type = scraper_type
+        self.json_source_url = json_source_url
+
+    def __eq__(self, other):
+        if not isinstance(other, GroupEventsKernel):
+            return False
+        compare = self.group_name == other.group_name and self.event_template == other.event_template
+        compare = compare and self.calendar_ids == other.calendar_ids and self.scraper_type == other.scraper_type
+        compare = compare and self.json_source_url == other.json_source_url
+        return compare
 
 class EventsToUploadFromCalendarID:
     events: [MobilizonEvent] = None
@@ -27,6 +46,10 @@ class EventsToUploadFromCalendarID:
 
 
 class Scraper(ABC):
+    cache_db: SQLiteDB
+    def __init__(self, cache_db):
+        self.cached_db = cache_db
+
     @abstractmethod
     def _convert_scrapped_info_to_upload(self):
         pass
@@ -46,8 +69,6 @@ class Scraper(ABC):
     @abstractmethod
     def get_source_type(self):
         pass
-
-
 
 
 
