@@ -14,12 +14,12 @@ class TestJSONParser(unittest.TestCase):
     def test_gcal_event_kernel(self):
         google_calendars: [GroupEventsKernel] = get_group_kernels(
             f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/Scraper%20Kernels/Google%20Calendar/gcal.json",
-            ScraperTypes.gCal
+            ScraperTypes.GOOGLE_CAL
         )
         first_group: GroupEventsKernel = google_calendars[0]
 
         self.assertEqual("New Haven Library", first_group.group_name)
-        self.assertEqual(ScraperTypes.gCal, first_group.scraper_type)
+        self.assertEqual(ScraperTypes.GOOGLE_CAL, first_group.scraper_type)
         self.assertEqual("8qf27rmmeun7mat412odluuha11umbhm@import.calendar.google.com", first_group.calendar_ids[0])
         self.assertEqual(22, first_group.event_template.attributedToId)  # group ID
         self.assertEqual("family_education", first_group.event_template.category.name)
@@ -29,13 +29,13 @@ class TestJSONParser(unittest.TestCase):
     def test_farmers_event_kernel(self):
         farmers_market: [GroupEventsKernel] = get_group_kernels(
             f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/Scraper%20Kernels/Static/farmers_market.json",
-            ScraperTypes.json
+            ScraperTypes.STATIC
         )
 
         first_group: GroupEventsKernel = farmers_market[0]
 
         self.assertEqual("Stonington",first_group.group_name)
-        self.assertEqual(ScraperTypes.json, first_group.scraper_type)
+        self.assertEqual(ScraperTypes.STATIC, first_group.scraper_type)
         self.assertEqual("Stonington Farmers Market", first_group.calendar_ids[0])
         self.assertEqual(25, first_group.event_template.attributedToId) # group ID
         self.assertEqual("food_drink", first_group.event_template.category.name)
@@ -44,11 +44,11 @@ class TestJSONParser(unittest.TestCase):
     def test_reading_scraper_and_publisher_json(self):
         google_calendars: [GroupEventsKernel] = get_group_kernels(
             f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/Scraper%20Kernels/Google%20Calendar/gcal.json",
-            ScraperTypes.gCal
+            ScraperTypes.GOOGLE_CAL
         )
         farmers_market: [GroupEventsKernel] = get_group_kernels(
             f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/Scraper%20Kernels/Static/farmers_market.json",
-            ScraperTypes.json
+            ScraperTypes.STATIC
         )
         # expected: {Publisher: [(Scraper, [GroupEventsKernel])]} = {
         #     MobilizonUploader(True, None) : [

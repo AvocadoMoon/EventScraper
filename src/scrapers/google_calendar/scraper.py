@@ -14,7 +14,7 @@ logger = logging.getLogger(logger_name)
 
 class GoogleCalendarScraper(Scraper):
     def get_source_type(self):
-        return ScraperTypes.gCal
+        return ScraperTypes.GOOGLE_CAL
 
     google_calendar_api: GCalAPI
     def __init__(self, cache_db: SQLiteDB):

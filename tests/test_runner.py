@@ -33,7 +33,7 @@ class TestRunner(unittest.TestCase):
         cache_db: SQLiteDB = SQLiteDB(in_memory_sq_lite=True)
         farmers_market: [GroupEventsKernel] = get_group_kernels(
             f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/Scraper%20Kernels/Static/farmers_market.json",
-            ScraperTypes.json)
+            ScraperTypes.STATIC)
         publishers = {
             MobilizonUploader(True, cache_db): [
                 (StaticScraper(cache_db), farmers_market)

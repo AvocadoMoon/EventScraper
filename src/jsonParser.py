@@ -67,10 +67,10 @@ def get_scrapers_and_publishers(test_mode, cache_db, submission_path=None) -> {P
             match scraper_type_name:
                 case "GoogleCalendarKernelSources":
                     scraper_class = GoogleCalendarScraper
-                    scraper_type = ScraperTypes.gCal
+                    scraper_type = ScraperTypes.GOOGLE_CAL
                 case "StaticKernelSources":
                     scraper_class = StaticScraper
-                    scraper_type = ScraperTypes.json
+                    scraper_type = ScraperTypes.STATIC
 
             for kernel_source in scrapers[scraper_type_name]:
                 group_kernels = get_group_kernels(kernel_source, scraper_type)

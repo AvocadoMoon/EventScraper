@@ -17,7 +17,7 @@ logger = logging.getLogger(logger_name)
 class StaticScraper(Scraper):
 
     def get_source_type(self):
-        return ScraperTypes.json
+        return ScraperTypes.STATIC
 
     def _convert_scrapped_info_to_upload(self):
         pass

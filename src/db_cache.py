@@ -45,8 +45,8 @@ class UploadSource:
         self.sourceType = source_type
 
 class ScraperTypes:
-    json = "JSON"
-    gCal = "Google Calendar" 
+    STATIC = "JSON"
+    GOOGLE_CAL = "Google Calendar"
 
 class SQLiteDB:
     sql_db_connection: sqlite3.Connection

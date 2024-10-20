@@ -71,9 +71,9 @@ def manualTestCacheDB():
         UploadedEventRow("uuid3", "id1", "title1", "2022-05-04T10:00:00-04:00", "2", "group2")
     ]
     eventSources: [UploadSource] = [
-        UploadSource("uuid1", "website", "123", ScraperTypes.gCal),
-        UploadSource("uuid5", "website", "123", ScraperTypes.gCal),
-        UploadSource("uuid3", "website", "123", ScraperTypes.gCal)
+        UploadSource("uuid1", "website", "123", ScraperTypes.GOOGLE_CAL),
+        UploadSource("uuid5", "website", "123", ScraperTypes.GOOGLE_CAL),
+        UploadSource("uuid3", "website", "123", ScraperTypes.GOOGLE_CAL)
     ]
     db = SQLiteDB(True)
     for k in range(len(allEvents)):
