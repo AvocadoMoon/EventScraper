@@ -7,7 +7,7 @@ from src.publishers.mobilizon.api import MobilizonAPI
 from src.publishers.mobilizon.types import MobilizonEvent
 import logging
 from src.logger import logger_name
-from src.scrapers.abc_scraper import EventsToUploadFromCalendarID, GroupEventsKernel
+from src.parser.types import GroupEventsKernel, EventsToUploadFromCalendarID
 
 logger = logging.getLogger(logger_name)
 class MobilizonUploader(Publisher):

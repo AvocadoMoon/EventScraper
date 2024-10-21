@@ -1,18 +1,15 @@
 import copy
-import json
 import logging
-import os
-import urllib
-import urllib.request
 from datetime import datetime, timedelta
 
 from src.db_cache import ScraperTypes
-from src.jsonParser import get_group_kernels
 from src.logger import logger_name
 from src.publishers.mobilizon.types import MobilizonEvent
-from src.scrapers.abc_scraper import Scraper, EventsToUploadFromCalendarID, GroupEventsKernel
+from src.scrapers.abc_scraper import Scraper
+from src.parser.types import GroupEventsKernel, EventsToUploadFromCalendarID
 
 logger = logging.getLogger(logger_name)
+
 
 class StaticScraper(Scraper):
 
@@ -28,7 +25,7 @@ class StaticScraper(Scraper):
     def retrieve_from_source(self, group_kernel: GroupEventsKernel) -> [EventsToUploadFromCalendarID]:
         json_path = group_kernel.json_source_url
         logger.info(f"\nGetting farmer market events for {group_kernel.group_name}")
-        events: [MobilizonEvent] = hydrate_event_template_with_legitimate_times(json_path, group_kernel)
+        events: [MobilizonEvent] = hydrate_event_template_with_legitimate_times(group_kernel)
         event: MobilizonEvent
         for event in events:
             event.description = f"Automatically scraped by event bot: \n\n{event.description} \n\n Source for farmer market info: https://portal.ct.gov/doag/adarc/adarc/farmers-market-nutrition-program/authorized-redemption-locations"
@@ -38,19 +35,21 @@ class StaticScraper(Scraper):
         pass
 
 
-def hydrate_event_template_with_legitimate_times(json_path: str, group_kernel: GroupEventsKernel) -> [MobilizonEvent]:
-    event_schema: dict = None
-    with urllib.request.urlopen(json_path) as f:
-        event_schema = json.load(f)
+
+def hydrate_event_template_with_legitimate_times(group_kernel: GroupEventsKernel) -> [MobilizonEvent]:
+    """
+    Updating the initial default times from the static event to their relevant times for the week, unless
+    the end date has been reached.
+    """
 
     #############################################################
     # There can multiple days in a week when an event can occur #
     #############################################################
-    times = event_schema[group_kernel.group_name]["defaultTimes"]
+    times = group_kernel.default_time_info.default_times
 
     generated_events = []
 
-    end_date = datetime.fromisoformat(event_schema[group_kernel.group_name]["endDate"])
+    end_date = datetime.fromisoformat(group_kernel.default_time_info.end_time)
     now = datetime.utcnow().astimezone()
 
     if now.date() <= end_date.date():

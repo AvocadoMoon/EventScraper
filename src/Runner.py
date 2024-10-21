@@ -6,26 +6,15 @@ import time
 from requests.exceptions import HTTPError
 from slack_sdk.webhook import WebhookClient
 
-from src.db_cache import SQLiteDB, ScraperTypes
-from src.jsonParser import get_group_kernels, get_scrapers_and_publishers
+from src.db_cache import SQLiteDB
+from src.parser.jsonParser import get_runner_submission
 from src.logger import logger_name, setup_custom_logger
 from src.publishers.abc_publisher import Publisher
-from src.publishers.mobilizon.uploader import MobilizonUploader
-from src.scrapers.abc_scraper import Scraper, EventsToUploadFromCalendarID, GroupEventsKernel
+from src.scrapers.abc_scraper import Scraper
+from src.parser.types import GroupEventsKernel, GroupPackage, RunnerSubmission, EventsToUploadFromCalendarID
 from src.scrapers.google_calendar.api import ExpiredToken
-from src.scrapers.google_calendar.scraper import GoogleCalendarScraper
-from src.scrapers.statics.scraper import StaticScraper
 
 logger = logging.getLogger(logger_name)
-
-class RunnerSubmission:
-    def __init__(self, submitted_db: SQLiteDB,
-                 submitted_publishers: {Publisher: [(Scraper, [GroupEventsKernel])]},
-                 test: bool):
-        self.cache_db = submitted_db
-        self.test = test
-        self.publishers = submitted_publishers
-
 
 
 def runner(runner_submission: RunnerSubmission):
@@ -34,21 +23,22 @@ def runner(runner_submission: RunnerSubmission):
 
     while continue_scraping and num_retries < 5:
         try:
-            submitted_publishers: {Publisher: [(Scraper, [GroupEventsKernel])]} = runner_submission.publishers
+            submitted_publishers: {Publisher: [GroupPackage]} = runner_submission.publishers
             for publisher in submitted_publishers.keys():
                 publisher: Publisher
                 publisher.connect()
-                scraper_and_kernel_list = submitted_publishers[publisher]
-                for scraper_and_kernels in scraper_and_kernel_list:
-                    scraper: Scraper = scraper_and_kernels[0]
-                    scraper.connect_to_source()
-                    event_kernels: [GroupEventsKernel] = scraper_and_kernels[1]
+                group_package: GroupPackage
+                for group_package in submitted_publishers[publisher]:
+                    logger.info(f"Reading Group Package: {group_package.package_name}")
 
-                    for event_kernel in event_kernels:
-                        events: [EventsToUploadFromCalendarID] = scraper.retrieve_from_source(event_kernel)
-                        publisher.upload(events)
-
-                    scraper.close()
+                    for scraper_type in group_package.scraper_type_and_kernels.keys():
+                        scraper: Scraper = runner_submission.respective_scrapers[scraper_type]
+                        scraper.connect_to_source()
+                        group_event_kernels: [GroupEventsKernel] = group_package.scraper_type_and_kernels[scraper_type]
+                        for event_kernel in group_event_kernels:
+                            events: [EventsToUploadFromCalendarID] = scraper.retrieve_from_source(event_kernel)
+                            publisher.upload(events)
+                        scraper.close()
                 publisher.close()
 
             continue_scraping = False
@@ -102,8 +92,7 @@ if __name__ == "__main__":
 
         test_mode = False if "TEST_MODE" not in os.environ else True
         cache_db: SQLiteDB = SQLiteDB(test_mode)
-        publishers = get_scrapers_and_publishers(test_mode, cache_db)
-        submission: RunnerSubmission = RunnerSubmission(cache_db, publishers, False)
+        submission: RunnerSubmission = get_runner_submission(test_mode, cache_db)
 
         ######################
         # Execute Submission #

@@ -1,13 +1,14 @@
 
 from abc import ABC, abstractmethod
 
-from src.scrapers.abc_scraper import EventsToUploadFromCalendarID
-
 
 class Publisher(ABC):
 
     @abstractmethod
-    def upload(self, events_to_upload: [EventsToUploadFromCalendarID]):
+    def upload(self, events_to_upload):
+        """
+        Takes [EventsToUploadFromCalendarID]
+        """
         pass
 
     @abstractmethod

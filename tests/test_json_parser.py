@@ -1,10 +1,9 @@
 import unittest
 
 from src.db_cache import ScraperTypes
-from src.jsonParser import get_group_kernels, get_scrapers_and_publishers
-from src.publishers.abc_publisher import Publisher
+from src.parser.jsonParser import get_group_package, get_runner_submission
 from src.publishers.mobilizon.uploader import MobilizonUploader
-from src.scrapers.abc_scraper import Scraper, GroupEventsKernel
+from src.parser.types import GroupEventsKernel, GroupPackage, RunnerSubmission
 from src.scrapers.google_calendar.scraper import GoogleCalendarScraper
 from src.scrapers.statics.scraper import StaticScraper
 
@@ -12,11 +11,10 @@ from src.scrapers.statics.scraper import StaticScraper
 class TestJSONParser(unittest.TestCase):
 
     def test_gcal_event_kernel(self):
-        google_calendars: [GroupEventsKernel] = get_group_kernels(
-            f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/Scraper%20Kernels/Google%20Calendar/gcal.json",
-            ScraperTypes.GOOGLE_CAL
+        google_calendars: GroupPackage = get_group_package(
+            f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/Group%20Packages/gcal.json",
         )
-        first_group: GroupEventsKernel = google_calendars[0]
+        first_group: GroupEventsKernel = google_calendars.scraper_type_and_kernels[ScraperTypes.GOOGLE_CAL][0]
 
         self.assertEqual("New Haven Library", first_group.group_name)
         self.assertEqual(ScraperTypes.GOOGLE_CAL, first_group.scraper_type)
@@ -27,12 +25,11 @@ class TestJSONParser(unittest.TestCase):
 
 
     def test_farmers_event_kernel(self):
-        farmers_market: [GroupEventsKernel] = get_group_kernels(
-            f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/Scraper%20Kernels/Static/farmers_market.json",
-            ScraperTypes.STATIC
+        farmers_market: GroupPackage = get_group_package(
+            f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/Group%20Packages/farmers_market.json",
         )
 
-        first_group: GroupEventsKernel = farmers_market[0]
+        first_group: GroupEventsKernel = farmers_market.scraper_type_and_kernels[ScraperTypes.STATIC][0]
 
         self.assertEqual("Stonington",first_group.group_name)
         self.assertEqual(ScraperTypes.STATIC, first_group.scraper_type)
@@ -41,34 +38,33 @@ class TestJSONParser(unittest.TestCase):
         self.assertEqual("food_drink", first_group.event_template.category.name)
         self.assertEqual("96", first_group.event_template.picture.mediaId)
 
-    def test_reading_scraper_and_publisher_json(self):
-        google_calendars: [GroupEventsKernel] = get_group_kernels(
-            f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/Scraper%20Kernels/Google%20Calendar/gcal.json",
-            ScraperTypes.GOOGLE_CAL
+    def test_runner_submission_json(self):
+        google_calendars: GroupPackage = get_group_package(
+            f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/Group%20Packages/gcal.json",
         )
-        farmers_market: [GroupEventsKernel] = get_group_kernels(
-            f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/Scraper%20Kernels/Static/farmers_market.json",
-            ScraperTypes.STATIC
+        farmers_market: GroupPackage = get_group_package(
+            f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/Group%20Packages/farmers_market.json",
         )
-        # expected: {Publisher: [(Scraper, [GroupEventsKernel])]} = {
-        #     MobilizonUploader(True, None) : [
-        #         (GoogleCalendarScraper(None), google_calendars),
-        #         (StaticScraper(None), farmers_market)
-        #     ]
-        # }
-        test_scraper_publisher: {Publisher: [(Scraper, [GroupEventsKernel])]} = get_scrapers_and_publishers(True, None,
-                                                                                                            "https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/Scraper%20Submission/include_everything.json")
-        first_publisher = list(test_scraper_publisher.keys())[0]
-        gcal = test_scraper_publisher[first_publisher][0]
-        static = test_scraper_publisher[first_publisher][1]
-        self.assertIsInstance(first_publisher, MobilizonUploader, "Expected Mobilizon Uploader")
-        self.assertIsInstance(gcal[0], GoogleCalendarScraper, "Expected Calendar Scraper")
-        self.assertIsInstance(static[0], StaticScraper, "Expected Static Scraper")
 
-        for i in range(len(gcal[1])):
-            self.assertEqual(google_calendars[i], gcal[1][i])
-        for i in range(len(static[1])):
-            self.assertEqual(farmers_market[i], static[1][i])
+        runner_submission: RunnerSubmission = get_runner_submission(True, None,
+                                                                         "https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/Scraper%20Submission/include_everything.json")
+
+        mobilizon_publisher = list(runner_submission.publishers.keys())[0]
+        scrapers = list(runner_submission.publishers.values())[0]
+
+        self.assertIsInstance(mobilizon_publisher, MobilizonUploader, "Expected Mobilizon Uploader")
+        self.assertIsInstance(runner_submission.respective_scrapers[ScraperTypes.GOOGLE_CAL],
+                              GoogleCalendarScraper, "Expected Calendar Scraper")
+        self.assertIsInstance(runner_submission.respective_scrapers[ScraperTypes.STATIC],
+                              StaticScraper, "Expected Static Scraper")
+
+        gcal = scrapers[0].scraper_type_and_kernels[ScraperTypes.GOOGLE_CAL]
+        static = scrapers[1].scraper_type_and_kernels[ScraperTypes.STATIC]
+        for i in range(len(gcal)):
+            self.assertEqual(google_calendars.scraper_type_and_kernels[ScraperTypes.GOOGLE_CAL][i], gcal[i])
+        for i in range(len(static)):
+            self.assertEqual(farmers_market.scraper_type_and_kernels[ScraperTypes.STATIC][i],
+                             static[i])
 
 if __name__ == '__main__':
     unittest.main()
