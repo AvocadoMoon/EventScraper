@@ -12,7 +12,7 @@ class TestJSONParser(unittest.TestCase):
 
     def test_gcal_event_kernel(self):
         google_calendars: GroupPackage = get_group_package(
-            f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/Group%20Packages/gcal.json",
+            f"https://kernels.ctgrassroots.org/Group%20Packages/gcal.json",
         )
         first_group: GroupEventsKernel = google_calendars.scraper_type_and_kernels[ScraperTypes.GOOGLE_CAL][0]
 
@@ -26,7 +26,7 @@ class TestJSONParser(unittest.TestCase):
 
     def test_farmers_event_kernel(self):
         farmers_market: GroupPackage = get_group_package(
-            f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/Group%20Packages/farmers_market.json",
+            f"https://kernels.ctgrassroots.org/Group%20Packages/farmers_market.json",
         )
 
         first_group: GroupEventsKernel = farmers_market.scraper_type_and_kernels[ScraperTypes.STATIC][0]
@@ -40,14 +40,14 @@ class TestJSONParser(unittest.TestCase):
 
     def test_runner_submission_json(self):
         google_calendars: GroupPackage = get_group_package(
-            f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/Group%20Packages/gcal.json",
+            f"https://kernels.ctgrassroots.org/Group%20Packages/gcal.json",
         )
         farmers_market: GroupPackage = get_group_package(
-            f"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/Group%20Packages/farmers_market.json",
+            f"https://kernels.ctgrassroots.org/Group%20Packages/farmers_market.json",
         )
 
         runner_submission: RunnerSubmission = get_runner_submission(True, None,
-                                                                         "https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/Scraper%20Submission/include_everything.json")
+                                                                         "https://kernels.ctgrassroots.org/Scraper%20Submission/include_everything.json")
 
         mobilizon_publisher = list(runner_submission.publishers.keys())[0]
         scrapers = list(runner_submission.publishers.values())[0]

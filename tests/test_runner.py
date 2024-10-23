@@ -17,7 +17,7 @@ class TestRunner(unittest.TestCase):
     def test_runners_insertions_correctness(self):
         cache_db: SQLiteDB = SQLiteDB(in_memory_sq_lite=True)
         submission = get_runner_submission(True, cache_db,
-                                           "https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/test-json/test-submission.json")
+                                           "https://kernels.ctgrassroots.org/test-json/test-submission.json")
         runner(submission)
         db_results = cache_db.select_all_from_upload_table().fetchall()
         stonington_results = db_results[0]
@@ -43,7 +43,7 @@ class TestRunner(unittest.TestCase):
     def test_runners_idempotency_remote_submission(self):
         cache_db: SQLiteDB = SQLiteDB(in_memory_sq_lite=True)
         submission = get_runner_submission(True, cache_db,
-"https://raw.githubusercontent.com/AvocadoMoon/Events/refs/heads/main/Scraper%20Submission/farming_only.json")
+"https://kernels.ctgrassroots.org/test-json/test-submission.json")
 
         runner(submission)
         cache_db = submission.cache_db
