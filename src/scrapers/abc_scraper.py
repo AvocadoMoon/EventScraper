@@ -1,9 +1,8 @@
 
 from abc import ABC, abstractmethod
 
+from src.db_cache import SQLiteDB
 
-from src.jsonParser import GroupEventsKernel
-from src.publishers.mobilizon.types import MobilizonEvent
 
 def _generate_args(localVariables: dict) -> dict:
     args = {}
@@ -13,20 +12,11 @@ def _generate_args(localVariables: dict) -> dict:
     return args
 
 
-
-
-class EventsToUploadFromCalendarID:
-    events: [MobilizonEvent] = None
-    eventKernel: GroupEventsKernel = None
-    calendar_id: str = ""
-
-    def __init__(self, events: [MobilizonEvent], event_kernel: GroupEventsKernel, source_id: str):
-        self.events = events
-        self.eventKernel = event_kernel
-        self.calendar_id = source_id
-
-
 class Scraper(ABC):
+    cache_db: SQLiteDB
+    def __init__(self, cache_db):
+        self.cached_db = cache_db
+
     @abstractmethod
     def _convert_scrapped_info_to_upload(self):
         pass
@@ -36,7 +26,10 @@ class Scraper(ABC):
         pass
 
     @abstractmethod
-    def retrieve_from_source(self, event_kernel: GroupEventsKernel) -> [EventsToUploadFromCalendarID]:
+    def retrieve_from_source(self, event_kernel):
+        """
+        Takes GroupEventKernel and returns [EventsToUploadFromCalendarID]
+        """
         pass
 
     @abstractmethod
@@ -46,8 +39,5 @@ class Scraper(ABC):
     @abstractmethod
     def get_source_type(self):
         pass
-
-
-
 
 
