@@ -2,13 +2,12 @@ import json
 import os
 
 from src.db_cache import UploadedEventRow, UploadSource, SQLiteDB
-from src.jsonParser import GroupEventsKernel
 from src.publishers.abc_publisher import Publisher
 from src.publishers.mobilizon.api import MobilizonAPI
 from src.publishers.mobilizon.types import MobilizonEvent
 import logging
 from src.logger import logger_name
-from src.scrapers.abc_scraper import EventsToUploadFromCalendarID
+from src.parser.types import GroupEventsKernel, EventsToUploadFromCalendarID
 
 logger = logging.getLogger(logger_name)
 class MobilizonUploader(Publisher):

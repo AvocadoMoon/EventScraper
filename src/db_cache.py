@@ -45,8 +45,8 @@ class UploadSource:
         self.sourceType = source_type
 
 class ScraperTypes:
-    json = "JSON"
-    gCal = "Google Calendar" 
+    STATIC = "JSON"
+    GOOGLE_CAL = "Google Calendar"
 
 class SQLiteDB:
     sql_db_connection: sqlite3.Connection
@@ -138,7 +138,11 @@ class SQLiteDB:
         db_cursor = self.sql_db_connection.cursor()
         res = db_cursor.execute(f"SELECT * FROM {self.uploaded_events_table_name}")
         return res
-    
+
+    def select_all_from_event_source_table(self) -> sqlite3.Cursor:
+        db_cursor = self.sql_db_connection.cursor()
+        res = db_cursor.execute(f"SELECT * FROM {self.event_source_table_name}")
+        return res
     
         
         
