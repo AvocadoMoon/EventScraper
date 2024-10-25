@@ -18,8 +18,10 @@ class GoogleCalendarScraper(Scraper):
         return ScraperTypes.GOOGLE_CAL
 
     google_calendar_api: GCalAPI
+    cache_db: SQLiteDB
     def __init__(self, cache_db: SQLiteDB):
         super().__init__(cache_db)
+        self.cache_db = cache_db
         self.google_calendar_api = GCalAPI()
 
     def _get_specific_calendar_events(self, google_calendar_id, group_kernel: GroupEventsKernel):

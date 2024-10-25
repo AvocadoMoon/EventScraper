@@ -80,7 +80,7 @@ class MobilizonAPI:
     def __init__(self, endpoint: str, email: str, password: str):
         self._mobilizon_client = _MobilizonClient(endpoint, f'"{email}"', f'"{password}"')
         self.bot_actor = Actor(**self.getActors()["identities"][0])
-        logger.info("Logged In")
+        logger.info("Logged In Mobilizon")
     # events
         
     

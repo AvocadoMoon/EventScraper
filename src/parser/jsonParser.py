@@ -5,9 +5,9 @@ import urllib.request
 
 from src.db_cache import ScraperTypes
 from src.logger import logger_name
+from src.parser.types import GroupEventsKernel, TimeInfo, GroupPackage, RunnerSubmission
 from src.publishers.mobilizon.types import MobilizonEvent, EventParameters
 from src.scrapers.abc_scraper import Scraper
-from src.parser.types import GroupEventsKernel, TimeInfo, GroupPackage, RunnerSubmission
 
 logger = logging.getLogger(logger_name)
 
