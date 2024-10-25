@@ -84,7 +84,7 @@ if __name__ == "__main__":
     setup_custom_logger(logging.INFO)
     logger.info("Scraper Started")
     sleeping = 2
-    webhook = WebhookClient(os.environ.get("SLACK_WEBHOOK"))
+    webhook = None if os.environ.get("SLACK_WEBHOOK") is None else WebhookClient(os.environ.get("SLACK_WEBHOOK"))
     while True:
         #####################
         # Create Submission #
@@ -106,17 +106,19 @@ if __name__ == "__main__":
             logger.warning("Expired token.json needs to be replaced")
             timeToSleep = days_to_sleep(1)
             logger.warning("Sleeping only 1 day")
-            response = webhook.send(attachments=[
-                produce_slack_message("#e6e209", "Expired Token", "Replace token.json", "Medium")
-            ])
+            if webhook is not None:
+                response = webhook.send(attachments=[
+                    produce_slack_message("#e6e209", "Expired Token", "Replace token.json", "Medium")
+                ])
         
         except Exception as e:
             logger.error("Unknown Error")
             logger.error(e)
             logger.error("Going to Sleep for 7 days")
-            webhook.send(attachments=[
-                produce_slack_message("#ab1a13", "Event Scraper Unknown Error", "Check logs for error.", "High")
-            ])
+            if webhook is not None:
+                webhook.send(attachments=[
+                    produce_slack_message("#ab1a13", "Event Scraper Unknown Error", "Check logs for error.", "High")
+                ])
             timeToSleep = days_to_sleep(7)
 
         cache_db.close()

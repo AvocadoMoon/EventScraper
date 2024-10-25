@@ -15,8 +15,7 @@ def _generate_args(localVariables: dict) -> dict:
 class Scraper(ABC):
     cache_db: SQLiteDB
     def __init__(self, cache_db):
-        self.cached_db = cache_db
-
+        pass
     @abstractmethod
     def _convert_scrapped_info_to_upload(self):
         pass
