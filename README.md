@@ -24,4 +24,4 @@ Misc:
 
 ---
 #### Docker Volumes
-/app/config:[HOST DIR] -- The files needed within this config folder are "adc.json". This is the application default credentials required for accessing Google resources such as calendars. Please create your own google application, and store it's credentials here.
+/app/config:[HOST DIR] -- The files needed within this config folder are "token.json" if you happen to use the Google Calendar scraper. Please follow instructions on the wiki page to create this "token.json" file.
