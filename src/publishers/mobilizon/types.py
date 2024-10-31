@@ -77,8 +77,8 @@ class EventParameters:
         description: str = ""
         originId: str = None
         
-        def __init__(self, locality:str, postalCode:str, street:str, 
-                     country:str, type=None, originId=None, 
+        def __init__(self, locality:str, postalCode:str = "", street:str = "",
+                     country:str = "United States", type=None, originId=None,
                      region:str = "Connecticut", geom:str = None,
                      timezone = "America/New_York", description=""):
             args = _generate_args(locals())

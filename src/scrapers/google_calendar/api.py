@@ -13,6 +13,7 @@ from geopy.exc import GeocoderTimedOut
 from src.logger import logger_name
 import copy
 
+from src.scrapers.abc_scraper import find_geolocation_from_address
 
 logger = logging.getLogger(logger_name)
 
@@ -139,23 +140,21 @@ def _process_google_event(googleEvent: dict, eventsToUpload: [], checkCacheForEv
         startDateTime = datetime.fromisoformat(starTimeGoogleEvent.replace('Z', '+00:00')).astimezone()
         endDateTime = datetime.fromisoformat(endTimeGooglEvent.replace('Z', '+00:00')).astimezone()
         if not checkCacheForEvent(startDateTime.isoformat(), title, calendarId):
-            eventAddress = parse_google_location(googleEvent.get("location"), eventKernel.physicalAddress, title)
+            eventAddress, default_location_notif = find_geolocation_from_address(parse_google_location(googleEvent.get("location"), eventKernel.physicalAddress), eventKernel.physicalAddress, title)
             eventKernel.beginsOn = startDateTime.isoformat()
             eventKernel.endsOn = endDateTime.isoformat()
             eventKernel.physicalAddress = eventAddress
             eventKernel.title = title
-            eventKernel.description = f"Automatically scraped by Event Bot: \n\n{description}"
+            eventKernel.description = f"Automatically scraped by Event Bot {default_location_notif}: \n\n{description}"
             eventsToUpload.append(eventKernel)
             
 
-def parse_google_location(location:str, default_location: EventParameters.Address, event_title: str):
-    if location is None and default_location is not None:
+def parse_google_location(location:str, default_location: EventParameters.Address):
+    if location is None:
         logger.debug("No location provided, using default")
         return default_location
-    if location is None:
-        return None
     tokens = location.split(",")
-    address: EventParameters.Address = None
+    address: EventParameters.Address
     match len(tokens):
         case 1:
             return default_location
@@ -168,24 +167,10 @@ def parse_google_location(location:str, default_location: EventParameters.Addres
         case 5:
             address = EventParameters.Address(locality=tokens[2], postalCode=tokens[3], street=tokens[1], country=tokens[4])
         case _:
-            return None
+            return default_location
 
-    # Address given is default, so don't need to call Nominatim
-    if (default_location is not None and default_location.locality in location
-        and default_location.street in location and default_location.postalCode in location):
-        logger.debug(f"{event_title} location included with calendar, but is same as default location.")
-        return default_location
-    
-    try:
-        geo_locator = Nominatim(user_agent="Mobilizon Event Bot", timeout=10)
-        geo_code_location = geo_locator.geocode(f"{address.street}, {address.locality}, {address.postalCode}")
-        if geo_code_location is None:
-            return None
-        address.geom = f"{geo_code_location.longitude};{geo_code_location.latitude}"
-        logger.info(f"{event_title}: Outsourced location was {address.street}, {address.locality}")
-        return address
-    except GeocoderTimedOut:
-        return None
+    return address
+
     
 
 if __name__ == "__main__":
