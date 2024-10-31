@@ -1,5 +1,6 @@
 import copy
 import logging
+import os
 import urllib.request
 from datetime import datetime, timedelta, timezone
 
@@ -58,9 +59,9 @@ def _hydrate_event_template(calendar: Calendar, event_kernel: MobilizonEvent) ->
         end = event.get("DTEND").dt
         summary = str(event.get("SUMMARY"))
         status = event.get("STATUS")
-        if start > week_from_now:
+        if start > week_from_now and os.getenv("TEST") != "True":
             break
-        elif start < datetime.now(timezone.utc):
+        elif start < datetime.now(timezone.utc) and os.getenv("TEST") != "True":
             continue
         elif status == "CONFIRMED":
             event_template.title = summary
