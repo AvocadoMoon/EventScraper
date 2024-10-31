@@ -139,7 +139,7 @@ def _process_google_event(googleEvent: dict, eventsToUpload: [], checkCacheForEv
         startDateTime = datetime.fromisoformat(starTimeGoogleEvent.replace('Z', '+00:00')).astimezone()
         endDateTime = datetime.fromisoformat(endTimeGooglEvent.replace('Z', '+00:00')).astimezone()
         if not checkCacheForEvent(startDateTime.isoformat(), title, calendarId):
-            eventAddress = _parse_google_location(googleEvent.get("location"), eventKernel.physicalAddress, title)
+            eventAddress = parse_google_location(googleEvent.get("location"), eventKernel.physicalAddress, title)
             eventKernel.beginsOn = startDateTime.isoformat()
             eventKernel.endsOn = endDateTime.isoformat()
             eventKernel.physicalAddress = eventAddress
@@ -148,7 +148,7 @@ def _process_google_event(googleEvent: dict, eventsToUpload: [], checkCacheForEv
             eventsToUpload.append(eventKernel)
             
 
-def _parse_google_location(location:str, default_location: EventParameters.Address, event_title: str):
+def parse_google_location(location:str, default_location: EventParameters.Address, event_title: str):
     if location is None and default_location is not None:
         logger.debug("No location provided, using default")
         return default_location
