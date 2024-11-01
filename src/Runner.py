@@ -20,7 +20,7 @@ logger = logging.getLogger(logger_name)
 def runner(runner_submission: RunnerSubmission):
     continue_scraping = True
     num_retries = 0
-
+    theres_an_expired_token = False
     while continue_scraping and num_retries < 5:
         try:
             submitted_publishers: {Publisher: [GroupPackage]} = runner_submission.publishers
@@ -33,12 +33,18 @@ def runner(runner_submission: RunnerSubmission):
 
                     for scraper_type in group_package.scraper_type_and_kernels.keys():
                         scraper: Scraper = runner_submission.respective_scrapers[scraper_type]
-                        scraper.connect_to_source()
-                        group_event_kernels: [GroupEventsKernel] = group_package.scraper_type_and_kernels[scraper_type]
-                        for event_kernel in group_event_kernels:
-                            events: [EventsToUploadFromCalendarID] = scraper.retrieve_from_source(event_kernel)
-                            publisher.upload(events)
-                        scraper.close()
+                        try:
+                            scraper.connect_to_source()
+                            group_event_kernels: [GroupEventsKernel] = group_package.scraper_type_and_kernels[
+                                scraper_type]
+                            for event_kernel in group_event_kernels:
+                                events: [EventsToUploadFromCalendarID] = scraper.retrieve_from_source(event_kernel)
+                                publisher.upload(events)
+                            scraper.close()
+                        except ExpiredToken:
+                            theres_an_expired_token = True
+                            logger.warning("Expired token.json needs to be replaced. Will continue scraping other types")
+                            continue
                 publisher.close()
 
             continue_scraping = False
@@ -47,6 +53,8 @@ def runner(runner_submission: RunnerSubmission):
                 num_retries += 1
                 logger.warning("Going to sleep then retrying to scrape. Retry Num: " + num_retries)
                 time.sleep(120)
+    if theres_an_expired_token:
+        raise ExpiredToken
 
 def days_to_sleep(days):
     now = datetime.datetime.now()
@@ -103,9 +111,8 @@ if __name__ == "__main__":
             runner(submission)
             logger.info("Sleeping " + str(sleeping) + " Days Until Next Scrape")
         except ExpiredToken:
-            logger.warning("Expired token.json needs to be replaced")
-            timeToSleep = days_to_sleep(1)
-            logger.warning("Sleeping only 1 day")
+            timeToSleep = days_to_sleep(2)
+            logger.info("Sleeping " + str(sleeping) + " Days Until Next Scrape")
             if webhook is not None:
                 response = webhook.send(attachments=[
                     produce_slack_message("#e6e209", "Expired Token", "Replace token.json", "Medium")
