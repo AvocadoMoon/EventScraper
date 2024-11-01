@@ -2,7 +2,7 @@ import copy
 import logging
 import os
 import urllib.request
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
 
 import icalendar
 from geopy import Nominatim
@@ -56,7 +56,11 @@ def _hydrate_event_template(calendar: Calendar, event_kernel: MobilizonEvent) ->
     for event in calendar.walk('VEVENT'):
         event_template = copy.deepcopy(event_kernel)
         start = event.get("DTSTART").dt
+        if type(start) == date:
+            start = datetime.combine(start, datetime.min.time(), timezone.utc)
         end = event.get("DTEND").dt
+        if type(end) == date:
+            end = datetime.combine(end, datetime.min.time(), timezone.utc)
         summary = str(event.get("SUMMARY"))
         status = event.get("STATUS")
         if start > week_from_now and os.getenv("TEST") != "True":
