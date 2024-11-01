@@ -8,6 +8,7 @@ from src.logger import logger_name
 from src.parser.types import GroupEventsKernel, TimeInfo, GroupPackage, RunnerSubmission
 from src.publishers.mobilizon.types import MobilizonEvent, EventParameters
 from src.scrapers.abc_scraper import Scraper
+from src.scrapers.ical.scraper import ICALScraper
 
 logger = logging.getLogger(logger_name)
 
@@ -21,6 +22,8 @@ def retrieve_source_type(source_type_string):
             return ScraperTypes.STATIC
         case "GOOGLE_CAL":
             return ScraperTypes.GOOGLE_CAL
+        case "ICAL":
+            return ScraperTypes.ICAL
 
 def get_group_package(json_path: str) -> GroupPackage:
     group_schema: dict = None
@@ -89,6 +92,8 @@ def get_runner_submission(test_mode, cache_db, submission_path=None) -> RunnerSu
                             respective_scrapers[scraper_type] = GoogleCalendarScraper(cache_db)
                         case ScraperTypes.STATIC:
                             respective_scrapers[scraper_type] = StaticScraper(cache_db)
+                        case ScraperTypes.ICAL:
+                            respective_scrapers[scraper_type] = ICALScraper(cache_db)
 
     return RunnerSubmission(cache_db, publisher_package, test_mode, respective_scrapers)
 
