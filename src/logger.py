@@ -1,14 +1,10 @@
 import logging
 
-logger_name = "codebase_logger"
 
-def setup_custom_logger(logLevel: int):
-    formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(module)s - %(message)s')
-    handler = logging.StreamHandler()
-    handler.setFormatter(formatter)
-    
-    logger = logging.getLogger(logger_name)
-    logger.setLevel(logLevel)
-    logger.addHandler(handler)
-    return logger
+def create_logger_from_designated_logger(logger_name: str, codebase_logger_level: int=logging.INFO):
+    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+    logger = logging.getLogger("codebase_logger")
+    logger.setLevel(codebase_logger_level)
+    return logger.getChild(logger_name)
+
 

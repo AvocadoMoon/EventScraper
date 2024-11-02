@@ -6,7 +6,6 @@ from datetime import timezone, timedelta, datetime
 from geopy.geocoders import Nominatim
 
 from src.db_cache import UploadedEventRow, SQLiteDB, UploadSource, ScraperTypes
-from src.logger import setup_custom_logger
 from src.parser.types import GroupEventsKernel
 from src.publishers.mobilizon.api import MobilizonAPI
 from src.publishers.mobilizon.types import EventParameters
@@ -116,7 +115,7 @@ def manual_test_ical():
 
 
 if __name__ == "__main__":
-    setup_custom_logger(logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
     manual_test_ical()
     # manualTestCreation()
     # manualTestGoogleCalendar(False)

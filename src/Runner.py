@@ -7,14 +7,14 @@ from requests.exceptions import HTTPError
 from slack_sdk.webhook import WebhookClient
 
 from src.db_cache import SQLiteDB
+from src.logger import create_logger_from_designated_logger
 from src.parser.jsonParser import get_runner_submission
-from src.logger import logger_name, setup_custom_logger
+from src.parser.types import GroupEventsKernel, GroupPackage, RunnerSubmission, EventsToUploadFromCalendarID
 from src.publishers.abc_publisher import Publisher
 from src.scrapers.abc_scraper import Scraper
-from src.parser.types import GroupEventsKernel, GroupPackage, RunnerSubmission, EventsToUploadFromCalendarID
 from src.scrapers.google_calendar.api import ExpiredToken
 
-logger = logging.getLogger(logger_name)
+logger = create_logger_from_designated_logger(__name__)
 
 
 def runner(runner_submission: RunnerSubmission):
@@ -89,7 +89,7 @@ def produce_slack_message(color, title, text, priority):
 
 
 if __name__ == "__main__":
-    setup_custom_logger(logging.INFO)
+
     logger.info("Scraper Started")
     sleeping = 2
     webhook = None if os.environ.get("SLACK_WEBHOOK") is None else WebhookClient(os.environ.get("SLACK_WEBHOOK"))

@@ -1,21 +1,19 @@
-from google.auth.transport.requests import Request
+import copy
+import os
+from datetime import datetime, timedelta
+
 import google.auth
+from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build, Resource
 from googleapiclient.errors import HttpError
-from datetime import datetime, timedelta
-from src.publishers.mobilizon.types import MobilizonEvent, EventParameters
-import os
-import logging
-from geopy.geocoders import Nominatim
-from geopy.exc import GeocoderTimedOut
-from src.logger import logger_name
-import copy
 
+from src.logger import create_logger_from_designated_logger
+from src.publishers.mobilizon.types import MobilizonEvent, EventParameters
 from src.scrapers.abc_scraper import find_geolocation_from_address
 
-logger = logging.getLogger(logger_name)
+logger = create_logger_from_designated_logger(__name__)
 
 # Subscribe to the calendars
 # https://webapps.stackexchange.com/questions/5217/how-can-i-find-the-subscribe-url-from-the-google-calendar-embed-source-code
@@ -44,7 +42,6 @@ class GCalAPI:
         pass
     
     def init_calendar_read_client_browser(self, token_path: str):
-        logger.info("Logged in Google Cal Browser")
         SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
         credentialTokens = None
         if os.path.exists(token_path):
@@ -66,6 +63,7 @@ class GCalAPI:
             except Exception:
                 raise ExpiredToken
         self._apiClient = build("calendar", "v3", credentials=credentialTokens)
+        logger.info("Logged in Google Cal Browser")
 
     
     def init_calendar_read_client_adc(self):

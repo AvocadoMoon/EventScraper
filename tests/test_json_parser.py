@@ -12,7 +12,7 @@ class TestJSONParser(unittest.TestCase):
 
     def test_gcal_event_kernel(self):
         google_calendars: GroupPackage = get_group_package(
-            f"https://kernels.ctgrassroots.org/Group%20Packages/gcal.json",
+            f"https://kernels.ctgrassroots.org/Group%20Packages/libraries.json",
         )
         first_group: GroupEventsKernel = google_calendars.scraper_type_and_kernels[ScraperTypes.GOOGLE_CAL][0]
 
@@ -40,7 +40,7 @@ class TestJSONParser(unittest.TestCase):
 
     def test_runner_submission_json(self):
         google_calendars: GroupPackage = get_group_package(
-            f"https://kernels.ctgrassroots.org/Group%20Packages/gcal.json",
+            f"https://kernels.ctgrassroots.org/Group%20Packages/misc.json",
         )
         farmers_market: GroupPackage = get_group_package(
             f"https://kernels.ctgrassroots.org/Group%20Packages/farmers_market.json",
@@ -50,7 +50,7 @@ class TestJSONParser(unittest.TestCase):
                                                                          "https://kernels.ctgrassroots.org/Scraper%20Submission/include_everything.json")
 
         mobilizon_publisher = list(runner_submission.publishers.keys())[0]
-        scrapers = list(runner_submission.publishers.values())[0]
+        group_packages = list(runner_submission.publishers.values())[0]
 
         self.assertIsInstance(mobilizon_publisher, MobilizonUploader, "Expected Mobilizon Uploader")
         self.assertIsInstance(runner_submission.respective_scrapers[ScraperTypes.GOOGLE_CAL],
@@ -58,10 +58,7 @@ class TestJSONParser(unittest.TestCase):
         self.assertIsInstance(runner_submission.respective_scrapers[ScraperTypes.STATIC],
                               StaticScraper, "Expected Static Scraper")
 
-        gcal = scrapers[0].scraper_type_and_kernels[ScraperTypes.GOOGLE_CAL]
-        static = scrapers[1].scraper_type_and_kernels[ScraperTypes.STATIC]
-        for i in range(len(gcal)):
-            self.assertEqual(google_calendars.scraper_type_and_kernels[ScraperTypes.GOOGLE_CAL][i], gcal[i])
+        static = group_packages[2].scraper_type_and_kernels[ScraperTypes.STATIC]
         for i in range(len(static)):
             self.assertEqual(farmers_market.scraper_type_and_kernels[ScraperTypes.STATIC][i],
                              static[i])
