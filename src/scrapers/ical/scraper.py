@@ -63,9 +63,11 @@ def _hydrate_event_template(calendar: Calendar, event_kernel: MobilizonEvent) ->
             end = datetime.combine(end, datetime.min.time(), timezone.utc)
         summary = str(event.get("SUMMARY"))
         status = event.get("STATUS")
-        if start > week_from_now and os.getenv("TEST") != "True":
-            break
-        elif start < datetime.now(timezone.utc) and os.getenv("TEST") != "True":
+        over_a_week = week_from_now < start
+        before_today = start < datetime.now(timezone.utc)
+
+        # Have to search entire list because events aren't organized
+        if (over_a_week or before_today) and os.getenv("TEST") != "True":
             continue
         elif status == "CONFIRMED":
             event_template.title = summary
