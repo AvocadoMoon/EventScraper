@@ -1,13 +1,8 @@
-import logging
 import unittest
 
 from src.Runner import runner
-from src.db_cache import SQLiteDB, ScraperTypes
-from src.parser.jsonParser import get_group_package, get_runner_submission
-from src.parser.types import GroupEventsKernel, RunnerSubmission
-from src.logger import setup_custom_logger
-from src.publishers.mobilizon.uploader import MobilizonUploader
-from src.scrapers.statics.scraper import StaticScraper
+from src.db_cache import SQLiteDB
+from src.parser.jsonParser import get_runner_submission
 
 
 # TODO: Test the entire runner interaction that it executes
@@ -60,5 +55,4 @@ class TestRunner(unittest.TestCase):
                 self.assertEqual(db_results[row][column], second_db_results[row][column])
 
 if __name__ == "__main__":
-    setup_custom_logger(logging.INFO)
     unittest.main()

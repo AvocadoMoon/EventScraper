@@ -1,14 +1,13 @@
 import copy
-import logging
 from datetime import datetime, timedelta
 
 from src.db_cache import ScraperTypes
-from src.logger import logger_name
+from src.logger import create_logger_from_designated_logger
+from src.parser.types import GroupEventsKernel, EventsToUploadFromCalendarID
 from src.publishers.mobilizon.types import MobilizonEvent
 from src.scrapers.abc_scraper import Scraper
-from src.parser.types import GroupEventsKernel, EventsToUploadFromCalendarID
 
-logger = logging.getLogger(logger_name)
+logger = create_logger_from_designated_logger(__name__)
 
 
 class StaticScraper(Scraper):

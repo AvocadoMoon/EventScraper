@@ -5,11 +5,11 @@ from geopy import Nominatim
 from geopy.exc import GeocoderTimedOut
 
 from src.db_cache import SQLiteDB
-from src.logger import logger_name
+from src.logger import create_logger_from_designated_logger
 from src.publishers.mobilizon.types import EventParameters
 
 
-logger = logging.getLogger(logger_name)
+logger = create_logger_from_designated_logger(__name__)
 
 
 def _generate_args(localVariables: dict) -> dict:
@@ -33,7 +33,7 @@ def find_geolocation_from_address(address: EventParameters.Address,
         if geo_code_location is None:
             return default_location, default_location_notif
         address.geom = f"{geo_code_location.longitude};{geo_code_location.latitude}"
-        logger.info(f"{event_title}: Outsourced location was {address.street}, {address.locality}")
+        logger.debug(f"{event_title}: Outsourced location was {address.street}, {address.locality}")
         return address, ""
     except GeocoderTimedOut:
         return default_location, default_location_notif
