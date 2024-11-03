@@ -1,12 +1,10 @@
 import json
-import logging
 import os
 import urllib.request
 
-from src.db_cache import ScraperTypes
 from src.logger import create_logger_from_designated_logger
-from src.parser.types import GroupEventsKernel, TimeInfo, GroupPackage, RunnerSubmission
-from src.publishers.mobilizon.types import MobilizonEvent, EventParameters
+from src.parser.types.submission_handlers import *
+from src.parser.types.generics import GenericAddress, GenericEvent
 from src.scrapers.abc_scraper import Scraper
 from src.scrapers.ical.scraper import ICALScraper
 
@@ -35,15 +33,12 @@ def get_group_package(json_path: str) -> GroupPackage:
 
     for group_name, group_info in group_schema["groupKernels"].items():
 
-        mobilizon_metadata = group_info["publisherInfo"]["mobilizon"]
-
-        event_address = None if "defaultLocation" not in group_info else EventParameters.Address(**group_info["defaultLocation"])
-        category = None if "defaultCategory" not in mobilizon_metadata else EventParameters.Categories[mobilizon_metadata["defaultCategory"]]
-        event_kernel = MobilizonEvent(mobilizon_metadata["groupID"], none_if_not_present("title", group_info),
-                                     none_if_not_present("defaultDescription", group_info), none_if_not_present("beginsOn", group_info),
-                                     group_info["onlineAddress"], none_if_not_present("endsOn", group_info),
-                                     event_address, category,
-                                     none_if_not_present("defaultTags", mobilizon_metadata), EventParameters.MediaInput(mobilizon_metadata["defaultImageID"]))
+        event_address = None if "defaultLocation" not in group_info else GenericAddress(**group_info["defaultLocation"])
+        event_kernel = GenericEvent(group_info["publisherInfo"], none_if_not_present("title", group_info),
+                     none_if_not_present("beginsOn", group_info), none_if_not_present("defaultDescription", group_info),
+                     none_if_not_present("endsOn", group_info),
+                     group_info["onlineAddress"], none_if_not_present("phoneAddress", group_info),
+                     event_address)
 
         calendar_ids = group_info["calendarIDs"]
         scraper_type: ScraperTypes = retrieve_source_type(group_info["calendarType"])

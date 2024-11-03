@@ -3,8 +3,8 @@ from datetime import datetime, timedelta
 
 from src.db_cache import ScraperTypes
 from src.logger import create_logger_from_designated_logger
-from src.parser.types import GroupEventsKernel, EventsToUploadFromCalendarID
-from src.publishers.mobilizon.types import MobilizonEvent
+from src.parser.types.submission_handlers import GroupEventsKernel, EventsToUploadFromCalendarID
+from src.parser.types.generics import GenericEvent
 from src.scrapers.abc_scraper import Scraper
 
 logger = create_logger_from_designated_logger(__name__)
@@ -23,9 +23,9 @@ class StaticScraper(Scraper):
 
     def retrieve_from_source(self, group_kernel: GroupEventsKernel) -> [EventsToUploadFromCalendarID]:
         json_path = group_kernel.json_source_url
-        logger.info(f"\nGetting farmer market events for {group_kernel.group_name}")
-        events: [MobilizonEvent] = hydrate_event_template_with_legitimate_times(group_kernel)
-        event: MobilizonEvent
+        logger.info(f"Getting static events: {group_kernel.group_name}")
+        events: [GenericEvent] = hydrate_event_template_with_legitimate_times(group_kernel)
+        event: GenericEvent
         for event in events:
             event.description = f"Automatically scraped by event bot: \n\n{event.description} \n\n Source for farmer market info: https://portal.ct.gov/doag/adarc/adarc/farmers-market-nutrition-program/authorized-redemption-locations"
         return [EventsToUploadFromCalendarID(events, group_kernel, group_kernel.group_name)]
@@ -35,7 +35,7 @@ class StaticScraper(Scraper):
 
 
 
-def hydrate_event_template_with_legitimate_times(group_kernel: GroupEventsKernel) -> [MobilizonEvent]:
+def hydrate_event_template_with_legitimate_times(group_kernel: GroupEventsKernel) -> [GenericEvent]:
     """
     Updating the initial default times from the static event to their relevant times for the week, unless
     the end date has been reached.
@@ -53,7 +53,7 @@ def hydrate_event_template_with_legitimate_times(group_kernel: GroupEventsKernel
 
     if now.date() <= end_date.date():
         for t in times:
-            event: MobilizonEvent = copy.deepcopy(group_kernel.event_template)
+            event: GenericEvent = copy.deepcopy(group_kernel.event_template)
             start_time = datetime.fromisoformat(t[0])
             end_time = datetime.fromisoformat(t[1])
 
@@ -68,8 +68,8 @@ def hydrate_event_template_with_legitimate_times(group_kernel: GroupEventsKernel
                 if start_time > end_date:
                     return []
 
-            event.beginsOn = start_time.astimezone().isoformat()
-            event.endsOn = end_time.astimezone().isoformat()
+            event.begins_on = start_time.astimezone().isoformat()
+            event.ends_on = end_time.astimezone().isoformat()
 
             generated_events.append(event)
 
