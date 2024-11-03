@@ -1,6 +1,6 @@
 from src.db_cache import ScraperTypes, SQLiteDB
+from src.parser.types.generics import GenericEvent
 from src.publishers.abc_publisher import Publisher
-from src.publishers.mobilizon.types import MobilizonEvent
 from src.scrapers.abc_scraper import Scraper
 
 
@@ -16,7 +16,7 @@ class TimeInfo:
         self.end_time = end_time
 
 class GroupEventsKernel:
-    event_template: MobilizonEvent
+    event_template: GenericEvent
     group_name: str
     calendar_ids: [str]
     scraper_type: ScraperTypes
@@ -64,11 +64,11 @@ class RunnerSubmission:
 
 
 class EventsToUploadFromCalendarID:
-    events: [MobilizonEvent] = None
+    events: [GenericEvent] = None
     eventKernel: GroupEventsKernel = None
     calendar_id: str = ""
 
-    def __init__(self, events: [MobilizonEvent], event_kernel: GroupEventsKernel, source_id: str):
+    def __init__(self, events: [GenericEvent], event_kernel: GroupEventsKernel, source_id: str):
         self.events = events
         self.eventKernel = event_kernel
         self.calendar_id = source_id

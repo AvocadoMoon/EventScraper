@@ -8,9 +8,9 @@ from icalendar.cal import Calendar
 
 from src.db_cache import SQLiteDB, ScraperTypes
 from src.logger import create_logger_from_designated_logger
-from src.parser.types import GroupEventsKernel, EventsToUploadFromCalendarID
+from src.parser.types.submission_handlers import GroupEventsKernel, EventsToUploadFromCalendarID
+from src.parser.types.generics import GenericAddress, GenericEvent
 from src.publishers.mobilizon.api import logger
-from src.publishers.mobilizon.types import MobilizonEvent, EventParameters
 from src.scrapers.abc_scraper import Scraper, find_geolocation_from_address
 
 logger = create_logger_from_designated_logger(__name__)
@@ -47,7 +47,7 @@ class ICALScraper(Scraper):
         pass
 
 
-def _hydrate_event_template(calendar: Calendar, event_kernel: MobilizonEvent) -> [MobilizonEvent]:
+def _hydrate_event_template(calendar: Calendar, event_kernel: GenericEvent) -> [GenericEvent]:
     week_from_now = datetime.now(timezone.utc) + timedelta(days=7)
     events = []
     for event in calendar.walk('VEVENT'):
@@ -68,15 +68,15 @@ def _hydrate_event_template(calendar: Calendar, event_kernel: MobilizonEvent) ->
             continue
         elif status == "CONFIRMED":
             event_template.title = summary
-            event_template.beginsOn = start.isoformat()
-            event_template.endsOn = end.isoformat()
+            event_template.begins_on = start.isoformat()
+            event_template.ends_on = end.isoformat()
             grabbed_description = "" if "DESCRIPTION" not in event else str(event.get("DESCRIPTION"))
             notif = ""
-            event_template.onlineAddress = event_template.onlineAddress if "URL" not in event else str(event.get("URL"))
+            event_template.online_address = event_template.online_address if "URL" not in event else str(event.get("URL"))
             if "LOCATION" in event:
-                parsed_location = _parse_retrieved_location(str(event.get("LOCATION")), event_template.physicalAddress)
-                event_template.physicalAddress, notif = find_geolocation_from_address(parsed_location,
-                                                                               event_template.physicalAddress,
+                parsed_location = _parse_retrieved_location(str(event.get("LOCATION")), event_template.physical_address)
+                event_template.physical_address, notif = find_geolocation_from_address(parsed_location,
+                                                                               event_template.physical_address,
                                                                                event_template.title)
             event_template.description = f"Automatically scraped by Event Bot {notif}: \n\n{grabbed_description}"
             events.append(event_template)
@@ -84,24 +84,24 @@ def _hydrate_event_template(calendar: Calendar, event_kernel: MobilizonEvent) ->
     return events
 
 
-def _parse_retrieved_location(location: str, default_location: EventParameters.Address) -> EventParameters.Address:
+def _parse_retrieved_location(location: str, default_location: GenericAddress) -> GenericAddress:
     if location is None:
         logger.debug("No location provided, using default")
         return default_location
     tokens = location.split(",")
-    address: EventParameters.Address
+    address: GenericAddress
     match len(tokens):
         case 1:
             return default_location
         case 2:
             return default_location
         case 3:
-            address = EventParameters.Address(locality=tokens[2], street=tokens[1])
+            address = GenericAddress(locality=tokens[2], street=tokens[1])
         case 4:
-            address = EventParameters.Address(locality=tokens[2], street=tokens[1],
+            address = GenericAddress(locality=tokens[2], street=tokens[1],
                                               region=tokens[3])
         case 5:
-            address = EventParameters.Address(locality=tokens[2], postalCode=tokens[4], street=tokens[1],
+            address = GenericAddress(locality=tokens[2], postalCode=tokens[4], street=tokens[1],
                                             region=tokens[3])
         case _:
             return default_location

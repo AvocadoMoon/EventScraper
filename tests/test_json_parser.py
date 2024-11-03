@@ -3,7 +3,7 @@ import unittest
 from src.db_cache import ScraperTypes
 from src.parser.jsonParser import get_group_package, get_runner_submission
 from src.publishers.mobilizon.uploader import MobilizonUploader
-from src.parser.types import GroupEventsKernel, GroupPackage, RunnerSubmission
+from src.parser.types.submission_handlers import GroupEventsKernel, GroupPackage, RunnerSubmission
 from src.scrapers.google_calendar.scraper import GoogleCalendarScraper
 from src.scrapers.statics.scraper import StaticScraper
 
@@ -15,13 +15,15 @@ class TestJSONParser(unittest.TestCase):
             f"https://kernels.ctgrassroots.org/Group%20Packages/libraries.json",
         )
         first_group: GroupEventsKernel = google_calendars.scraper_type_and_kernels[ScraperTypes.GOOGLE_CAL][0]
+        mobilizon_metadata = first_group.event_template.publisher_specific_info["mobilizon"]
 
         self.assertEqual("New Haven Library", first_group.group_name)
         self.assertEqual(ScraperTypes.GOOGLE_CAL, first_group.scraper_type)
         self.assertEqual("8qf27rmmeun7mat412odluuha11umbhm@import.calendar.google.com", first_group.calendar_ids[0])
-        self.assertEqual(22, first_group.event_template.attributedToId)  # group ID
-        self.assertEqual("family_education", first_group.event_template.category.name)
-        self.assertEqual("93", first_group.event_template.picture.mediaId)
+        self.assertEqual(22, mobilizon_metadata["groupID"])  # group ID
+        self.assertEqual("family_education", mobilizon_metadata["defaultCategory"])
+        self.assertEqual("93", mobilizon_metadata["defaultImageID"])
+        self.assertEqual(["Library"], mobilizon_metadata["defaultTags"])
 
 
     def test_farmers_event_kernel(self):
@@ -30,13 +32,14 @@ class TestJSONParser(unittest.TestCase):
         )
 
         first_group: GroupEventsKernel = farmers_market.scraper_type_and_kernels[ScraperTypes.STATIC][0]
-
+        mobilizon_metadata = first_group.event_template.publisher_specific_info["mobilizon"]
         self.assertEqual("Stonington",first_group.group_name)
         self.assertEqual(ScraperTypes.STATIC, first_group.scraper_type)
         self.assertEqual("Stonington Farmers Market", first_group.calendar_ids[0])
-        self.assertEqual(25, first_group.event_template.attributedToId) # group ID
-        self.assertEqual("food_drink", first_group.event_template.category.name)
-        self.assertEqual("96", first_group.event_template.picture.mediaId)
+        self.assertEqual(25, mobilizon_metadata["groupID"]) # group ID
+        self.assertEqual("food_drink", mobilizon_metadata["defaultCategory"])
+        self.assertEqual("96", mobilizon_metadata["defaultImageID"])
+        self.assertEqual(["Farmer Market"], mobilizon_metadata["defaultTags"])
 
     def test_runner_submission_json(self):
         google_calendars: GroupPackage = get_group_package(

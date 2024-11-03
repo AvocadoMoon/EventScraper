@@ -1,13 +1,12 @@
-import logging
 import os
 
 from src.db_cache import SQLiteDB, ScraperTypes
 from src.logger import create_logger_from_designated_logger
 from src.parser.jsonParser import get_group_package
 from src.publishers.mobilizon.api import logger
-from src.publishers.mobilizon.types import MobilizonEvent
 from src.scrapers.abc_scraper import Scraper
-from src.parser.types import GroupEventsKernel, EventsToUploadFromCalendarID
+from src.parser.types.submission_handlers import GroupEventsKernel, EventsToUploadFromCalendarID
+from src.parser.types.generics import GenericEvent
 from src.scrapers.google_calendar.api import GCalAPI
 
 
@@ -29,7 +28,7 @@ class GoogleCalendarScraper(Scraper):
         if not self.cache_db.no_entries_with_source_id(google_calendar_id):
             last_uploaded_event_date = self.cache_db.get_last_event_date_for_source_id(google_calendar_id)
 
-        events: [MobilizonEvent] = self.google_calendar_api.getAllEventsAWeekFromNow(
+        events: [GenericEvent] = self.google_calendar_api.getAllEventsAWeekFromNow(
             calendarId=google_calendar_id, eventKernel=group_kernel.event_template,
             checkCacheFunction=self.cache_db.entry_already_in_cache,
             dateOfLastEventScraped=last_uploaded_event_date)
@@ -56,7 +55,7 @@ class GoogleCalendarScraper(Scraper):
         google_calendars: [GroupEventsKernel] = get_group_package(f"{os.getcwd()}/src/scrapers/GCal.json")
         logger.info(f"\nGetting events from calendar {calendar_group}")
         gCal: GroupEventsKernel
-        all_events: [MobilizonEvent] = []
+        all_events: [GenericEvent] = []
         for gCal in google_calendars:
             if gCal.group_name == calendar_group:
                 for googleCalendarID in gCal.calendar_ids:
