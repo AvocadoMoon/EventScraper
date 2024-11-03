@@ -19,6 +19,9 @@ class Publisher(ABC):
     def close(self):
         pass
 
+    @abstractmethod
+    def generic_event_converter(self, generic_event):
+        pass
 
 
 

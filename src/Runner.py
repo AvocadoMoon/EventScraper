@@ -1,7 +1,7 @@
 import datetime
-import logging
 import os
 import time
+import traceback
 
 from requests.exceptions import HTTPError
 from slack_sdk.webhook import WebhookClient
@@ -9,7 +9,7 @@ from slack_sdk.webhook import WebhookClient
 from src.db_cache import SQLiteDB
 from src.logger import create_logger_from_designated_logger
 from src.parser.jsonParser import get_runner_submission
-from src.parser.types import GroupEventsKernel, GroupPackage, RunnerSubmission, EventsToUploadFromCalendarID
+from src.parser.types.submission_handlers import GroupEventsKernel, GroupPackage, RunnerSubmission, EventsToUploadFromCalendarID
 from src.publishers.abc_publisher import Publisher
 from src.scrapers.abc_scraper import Scraper
 from src.scrapers.google_calendar.api import ExpiredToken
@@ -121,6 +121,7 @@ if __name__ == "__main__":
         except Exception as e:
             logger.error("Unknown Error")
             logger.error(e)
+            logger.error(traceback.format_exc())
             logger.error("Going to Sleep for 7 days")
             if webhook is not None:
                 webhook.send(attachments=[

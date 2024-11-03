@@ -6,7 +6,8 @@ from datetime import timezone, timedelta, datetime
 from geopy.geocoders import Nominatim
 
 from src.db_cache import UploadedEventRow, SQLiteDB, UploadSource, ScraperTypes
-from src.parser.types import GroupEventsKernel
+from src.parser.types.generics import GenericEvent
+from src.parser.types.submission_handlers import GroupEventsKernel
 from src.publishers.mobilizon.api import MobilizonAPI
 from src.publishers.mobilizon.types import EventParameters
 from src.scrapers.google_calendar.api import GCalAPI
@@ -107,7 +108,8 @@ def manual_test_ical():
     cache_db = SQLiteDB(True)
     scraper = ICALScraper(cache_db)
 
-    event_kernel = GroupEventsKernel("", "",
+    event = GenericEvent({"mobilizon": {"groupID": 10}}, "Title", "", "", "", "", "", None)
+    event_kernel = GroupEventsKernel(event, "",
          ["https://calendar.google.com/calendar/ical/wbtblackbox%40gmail.com/public/basic.ics"],
                                      ScraperTypes.ICAL, "")
     scraper.retrieve_from_source(event_kernel)

@@ -1,4 +1,3 @@
-import logging
 from abc import ABC, abstractmethod
 
 from geopy import Nominatim
@@ -6,8 +5,7 @@ from geopy.exc import GeocoderTimedOut
 
 from src.db_cache import SQLiteDB
 from src.logger import create_logger_from_designated_logger
-from src.publishers.mobilizon.types import EventParameters
-
+from src.parser.types.generics import GenericAddress
 
 logger = create_logger_from_designated_logger(__name__)
 
@@ -19,9 +17,9 @@ def _generate_args(localVariables: dict) -> dict:
             args[name] = value
     return args
 
-def find_geolocation_from_address(address: EventParameters.Address,
-                                  default_location: EventParameters.Address,
-                                  event_title: str) -> (EventParameters.Address, str):
+def find_geolocation_from_address(address: GenericAddress,
+                                  default_location: GenericAddress,
+                                  event_title: str) -> (GenericAddress, str):
     # Address given is default, so don't need to call Nominatim
     default_location_notif = "with unverified location for address. Please check address on their website"
     if default_location == address:
