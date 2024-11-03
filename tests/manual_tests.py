@@ -1,21 +1,24 @@
-from src.publishers.mobilizon import MobilizonAPI
-from src.publishers.mobilizon import EventParameters, EventType
-from src.db_cache import UploadedEventRow, SQLiteDB, UploadSource, ScraperTypes
-from src.scrapers.google_calendar.api import GCalAPI
-from datetime import timezone, timedelta, datetime
 import json
-import os
-from geopy.geocoders import Nominatim
 import logging
-from src.logger import setup_custom_logger
+import os
+from datetime import timezone, timedelta, datetime
+
+from geopy.geocoders import Nominatim
+
+from src.db_cache import UploadedEventRow, SQLiteDB, UploadSource, ScraperTypes
+from src.parser.types import GroupEventsKernel
+from src.publishers.mobilizon.api import MobilizonAPI
+from src.publishers.mobilizon.types import EventParameters
+from src.scrapers.google_calendar.api import GCalAPI
+from src.scrapers.ical.scraper import ICALScraper
 
 endpoint = "https://ctgrassroots.org/graphiql"
 secrets: dict = None
-with open(f"{os.getcwd()}/src/secrets.json", "r") as f:
-    secrets = json.load(f)
+# with open(f"{os.getcwd()}/src/secrets.json", "r") as f:
+#     secrets = json.load(f)
+
 
 def manualTestCreation():
-    
 
     mobilizonAPI = MobilizonAPI(endpoint, secrets["email"], secrets["password"])
     # Time object requires timeZone
@@ -32,11 +35,6 @@ def manualTestCreation():
                                          type=location['addresstype'])
     
     # print(mobilizonAPI.getActors())
-    defaultImage = EventParameters.MediaInput(mediaId="87")
-    testEvent = EventType(14, "Test93", "Test description", beginsOn.isoformat(), "https://www.cafenine.com/",
-        endsOn.isoformat(), cafe9Local, category=EventParameters.Categories.book_clubs,
-        picture=defaultImage)
-    print(mobilizonAPI.bot_created_event(testEvent))
     # with open("//home/zek/Documents/Code/CTEventScraper/src/Duck.jpg", "rb") as f:
     #     params = {"file": f}
     #     print(mobilizonAPI.upload_file("Duck", f))
@@ -104,11 +102,21 @@ def _getAddressInfo():
     for key, value in calendar_locations.items():
         location = geo_locator.geocode(value)
         print(key, location.raw)
+
+def manual_test_ical():
+    cache_db = SQLiteDB(True)
+    scraper = ICALScraper(cache_db)
+
+    event_kernel = GroupEventsKernel("", "",
+         ["https://calendar.google.com/calendar/ical/wbtblackbox%40gmail.com/public/basic.ics"],
+                                     ScraperTypes.ICAL, "")
+    scraper.retrieve_from_source(event_kernel)
     
 
 
 if __name__ == "__main__":
-    setup_custom_logger(logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+    manual_test_ical()
     # manualTestCreation()
     # manualTestGoogleCalendar(False)
     # manualTestCacheDB()

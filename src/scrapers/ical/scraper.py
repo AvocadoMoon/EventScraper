@@ -1,22 +1,19 @@
 import copy
-import logging
 import os
 import urllib.request
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
 
 import icalendar
-from geopy import Nominatim
 from icalendar.cal import Calendar
 
 from src.db_cache import SQLiteDB, ScraperTypes
-from src.logger import logger_name
+from src.logger import create_logger_from_designated_logger
 from src.parser.types import GroupEventsKernel, EventsToUploadFromCalendarID
 from src.publishers.mobilizon.api import logger
 from src.publishers.mobilizon.types import MobilizonEvent, EventParameters
 from src.scrapers.abc_scraper import Scraper, find_geolocation_from_address
-from src.scrapers.google_calendar.api import parse_google_location
 
-logger = logging.getLogger(logger_name)
+logger = create_logger_from_designated_logger(__name__)
 
 
 class ICALScraper(Scraper):
@@ -56,12 +53,18 @@ def _hydrate_event_template(calendar: Calendar, event_kernel: MobilizonEvent) ->
     for event in calendar.walk('VEVENT'):
         event_template = copy.deepcopy(event_kernel)
         start = event.get("DTSTART").dt
+        if type(start) == date:
+            start = datetime.combine(start, datetime.min.time(), timezone.utc)
         end = event.get("DTEND").dt
+        if type(end) == date:
+            end = datetime.combine(end, datetime.min.time(), timezone.utc)
         summary = str(event.get("SUMMARY"))
         status = event.get("STATUS")
-        if start > week_from_now and os.getenv("TEST") != "True":
-            break
-        elif start < datetime.now(timezone.utc) and os.getenv("TEST") != "True":
+        over_a_week = week_from_now < start
+        before_today = start < datetime.now(timezone.utc)
+
+        # Have to search entire list because events aren't organized
+        if (over_a_week or before_today) and os.getenv("TEST") != "True":
             continue
         elif status == "CONFIRMED":
             event_template.title = summary

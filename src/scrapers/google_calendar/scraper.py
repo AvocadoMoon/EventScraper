@@ -2,8 +2,8 @@ import logging
 import os
 
 from src.db_cache import SQLiteDB, ScraperTypes
+from src.logger import create_logger_from_designated_logger
 from src.parser.jsonParser import get_group_package
-from src.logger import logger_name
 from src.publishers.mobilizon.api import logger
 from src.publishers.mobilizon.types import MobilizonEvent
 from src.scrapers.abc_scraper import Scraper
@@ -11,7 +11,7 @@ from src.parser.types import GroupEventsKernel, EventsToUploadFromCalendarID
 from src.scrapers.google_calendar.api import GCalAPI
 
 
-logger = logging.getLogger(logger_name)
+logger = create_logger_from_designated_logger(__name__)
 
 class GoogleCalendarScraper(Scraper):
     def get_source_type(self):

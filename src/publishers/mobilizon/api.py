@@ -1,14 +1,15 @@
+import json
+
+import requests
 from gql import Client
 from gql.transport.requests import RequestsHTTPTransport
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
+
+from src.logger import create_logger_from_designated_logger
 from src.publishers.mobilizon.gql_requests import EventGQL, AuthenticationGQL, ActorsGQL
 from src.publishers.mobilizon.types import MobilizonEvent, Actor
-import requests
-import json
-import logging
-from src.logger import logger_name
 
-logger = logging.getLogger(logger_name)
+logger = create_logger_from_designated_logger(__name__)
 
 
 class retry_if_not_exception_type(retry_if_exception):

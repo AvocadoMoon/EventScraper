@@ -4,13 +4,13 @@ import os
 import urllib.request
 
 from src.db_cache import ScraperTypes
-from src.logger import logger_name
+from src.logger import create_logger_from_designated_logger
 from src.parser.types import GroupEventsKernel, TimeInfo, GroupPackage, RunnerSubmission
 from src.publishers.mobilizon.types import MobilizonEvent, EventParameters
 from src.scrapers.abc_scraper import Scraper
 from src.scrapers.ical.scraper import ICALScraper
 
-logger = logging.getLogger(logger_name)
+logger = create_logger_from_designated_logger(__name__)
 
 
 def none_if_not_present(x, dictionary):
