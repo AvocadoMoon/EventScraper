@@ -125,8 +125,8 @@ def manual_test_ical():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
-    # manual_test_ical()
-    manual_test_file_upload()
+    manual_test_ical()
+    # manual_test_file_upload()
     # manualTestCreation()
     # manualTestGoogleCalendar(False)
     # manualTestCacheDB()
