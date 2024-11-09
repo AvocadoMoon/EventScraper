@@ -13,7 +13,7 @@ from src.parser.types.submission_handlers import GroupEventsKernel, GroupPackage
 from src.publishers.abc_publisher import Publisher
 from src.scrapers.abc_scraper import Scraper
 from src.scrapers.google_calendar.api import ExpiredToken
-import filter
+from src.filter import normalize_generic_event
 
 logger = create_logger_from_designated_logger(__name__)
 
@@ -40,7 +40,7 @@ def runner(runner_submission: RunnerSubmission):
                                 scraper_type]
                             for event_kernel in group_event_kernels:
                                 events: [EventsToUploadFromCalendarID] = scraper.retrieve_from_source(event_kernel)
-                                filter.normalize_generic_event(events)
+                                normalize_generic_event(events)
                                 publisher.upload(events)
                             scraper.close()
                         except ExpiredToken:
