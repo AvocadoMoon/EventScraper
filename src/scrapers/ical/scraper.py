@@ -13,6 +13,9 @@ from src.parser.types.generics import GenericAddress, GenericEvent
 from src.publishers.mobilizon.api import logger
 from src.scrapers.abc_scraper import Scraper, find_geolocation_from_address
 
+import validators
+import requests
+
 logger = create_logger_from_designated_logger(__name__)
 
 
@@ -70,6 +73,8 @@ def _hydrate_event_template(calendar: Calendar, event_kernel: GenericEvent) -> [
             event_template.title = summary
             event_template.begins_on = start.isoformat()
             event_template.ends_on = end.isoformat()
+            if 'ATTACH' in event and validators.url(event.get("ATTACH")):
+                event_template.picture = event.get("ATTACH")
             grabbed_description = "" if "DESCRIPTION" not in event else str(event.get("DESCRIPTION"))
             notif = ""
             event_template.online_address = event_template.online_address if "URL" not in event else str(event.get("URL"))

@@ -55,7 +55,7 @@ class GenericEvent:
 
     def __init__(self, publisher_specific_info: dict, title: str, begins_on: str, description: str = None,
                  ends_on: str = None, online_address: str = None,
-                 phone_address: str = None, physical_address: GenericAddress = None):
+                 phone_address: str = None, physical_address: GenericAddress = None, picture: str = None):
         self.publisher_specific_info = publisher_specific_info
         self.title = title
         self.description = description
@@ -64,6 +64,7 @@ class GenericEvent:
         self.online_address = online_address
         self.phone_address = phone_address
         self.physical_address = physical_address
+        self.picture = picture
 
     def __eq__(self, other):
         if type(other) != GenericEvent:

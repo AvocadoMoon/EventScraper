@@ -8,6 +8,7 @@ from src.parser.types.generics import GenericEvent
 from src.publishers.abc_publisher import Publisher
 from src.publishers.mobilizon.api import MobilizonAPI
 from src.publishers.mobilizon.types import MobilizonEvent, EventParameters
+import validators
 
 logger = create_logger_from_designated_logger(__name__)
 
@@ -41,6 +42,8 @@ class MobilizonUploader(Publisher):
                         self.fakeUUIDForTests += 1
                         upload_response = {"id": 1, "uuid": self.fakeUUIDForTests}
                     else:
+                        if event.picture is not None and validators.url(event.picture.mediaId):
+                            event.picture.mediaId = self.mobilizonAPI.upload_file(event.picture.mediaId)
                         upload_response = self.mobilizonAPI.bot_created_event(event)
                     logger.info(f"{event.title}: {upload_response}")
 
@@ -69,9 +72,14 @@ class MobilizonUploader(Publisher):
     def generic_event_converter(self, generic_event: GenericEvent):
         mobilizon_metadata = generic_event.publisher_specific_info["mobilizon"]
         category = None if "defaultCategory" not in mobilizon_metadata else EventParameters.Categories[mobilizon_metadata["defaultCategory"]]
-        mobilizon_picture = None if "defaultImageID" not in mobilizon_metadata else EventParameters.MediaInput(mobilizon_metadata["defaultImageID"])
-        mobilizon_tags = None if "defaultTags" not in mobilizon_metadata else mobilizon_metadata["defaultTags"]
 
+        if validators.url(generic_event.picture):
+            mobilizon_picture = EventParameters.MediaInput(generic_event.picture)
+        else:
+            mobilizon_picture = None if "defaultImageID" not in mobilizon_metadata else EventParameters.MediaInput(mobilizon_metadata["defaultImageID"])
+
+
+        mobilizon_tags = None if "defaultTags" not in mobilizon_metadata else mobilizon_metadata["defaultTags"]
         generic_physical_address = generic_event.physical_address
         mobilizon_physical_address = None if generic_physical_address == None else EventParameters.Address(locality=generic_physical_address.locality,
                                                              postalCode=generic_physical_address.postalCode,
