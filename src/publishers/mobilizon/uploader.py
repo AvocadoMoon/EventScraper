@@ -1,6 +1,8 @@
 import json
 import os
 
+from aiohttp import ClientError
+
 from src.db_cache import UploadedEventRow, UploadSource, SQLiteDB
 from src.logger import create_logger_from_designated_logger
 from src.parser.types.submission_handlers import EventsToUploadFromCalendarID
@@ -37,24 +39,28 @@ class MobilizonUploader(Publisher):
             for generic_event in all_events:
                 event: MobilizonEvent = self.generic_event_converter(generic_event)
                 upload_response: dict = {}
-                if not self.cache_db.entry_already_in_cache(event.beginsOn, event.title, source_id):
-                    if self.testMode:
-                        self.fakeUUIDForTests += 1
-                        upload_response = {"id": 1, "uuid": self.fakeUUIDForTests}
-                    else:
-                        if event.picture is not None and validators.url(event.picture.mediaId):
-                            potential_id = self.mobilizonAPI.upload_file(event.picture.mediaId)
-                            if potential_id != "":
-                                event.picture.mediaId = potential_id
-                        upload_response = self.mobilizonAPI.bot_created_event(event)
-                    logger.info(f"{event.title}: {upload_response}")
+                try:
+                    if not self.cache_db.entry_already_in_cache(event.beginsOn, event.title, source_id):
+                        if self.testMode:
+                            self.fakeUUIDForTests += 1
+                            upload_response = {"id": 1, "uuid": self.fakeUUIDForTests}
+                        else:
+                            if event.picture is not None and validators.url(event.picture.mediaId):
+                                potential_id = self.mobilizonAPI.upload_file(event.picture.mediaId)
+                                if potential_id != "":
+                                    event.picture.mediaId = potential_id
+                            upload_response = self.mobilizonAPI.bot_created_event(event)
+                        logger.info(f"{event.title}: {upload_response}")
 
-                    upload_row = UploadedEventRow(uuid=upload_response["uuid"], id=upload_response["id"],
-                                                  title=event.title, date=event.beginsOn,
-                                                  group_id=event.attributedToId, group_name=event_kernel.group_name)
-                    upload_source = UploadSource(uuid=upload_response["uuid"], website_url=event.onlineAddress,
-                                                 source=source_id, source_type=event_kernel.scraper_type)
-                    self.cache_db.insert_uploaded_event(upload_row, upload_source)
+                        upload_row = UploadedEventRow(uuid=upload_response["uuid"], id=upload_response["id"],
+                                                      title=event.title, date=event.beginsOn,
+                                                      group_id=event.attributedToId, group_name=event_kernel.group_name)
+                        upload_source = UploadSource(uuid=upload_response["uuid"], website_url=event.onlineAddress,
+                                                     source=source_id, source_type=event_kernel.scraper_type)
+                        self.cache_db.insert_uploaded_event(upload_row, upload_source)
+                except Exception as e:
+                    logger.error(f"Unable to upload the following event: {event}")
+
 
     def connect(self):
         if not self.testMode:

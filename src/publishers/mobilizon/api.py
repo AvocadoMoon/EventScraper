@@ -107,7 +107,7 @@ class MobilizonAPI:
                          'accept': 'application/json'}
             )
             content = json.loads(response.content)
-            if content is None:
+            if content is None or response.status_code != 200 or "errors" in content:
                 return ""
             return content["data"]["uploadMedia"]["id"]
 
