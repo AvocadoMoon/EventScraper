@@ -106,7 +106,10 @@ class MobilizonAPI:
                 headers={'Authorization': f'Bearer {self._mobilizon_client.loginTokens.accessToken}',
                          'accept': 'application/json'}
             )
-            return json.loads(response.content)["data"]["uploadMedia"]["id"]
+            content = json.loads(response.content)
+            if content is None:
+                return ""
+            return content["data"]["uploadMedia"]["id"]
 
     def logout(self):
         self._mobilizon_client.log_out()

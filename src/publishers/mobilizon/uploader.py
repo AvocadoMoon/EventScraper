@@ -43,7 +43,9 @@ class MobilizonUploader(Publisher):
                         upload_response = {"id": 1, "uuid": self.fakeUUIDForTests}
                     else:
                         if event.picture is not None and validators.url(event.picture.mediaId):
-                            event.picture.mediaId = self.mobilizonAPI.upload_file(event.picture.mediaId)
+                            potential_id = self.mobilizonAPI.upload_file(event.picture.mediaId)
+                            if potential_id != "":
+                                event.picture.mediaId = potential_id
                         upload_response = self.mobilizonAPI.bot_created_event(event)
                     logger.info(f"{event.title}: {upload_response}")
 
