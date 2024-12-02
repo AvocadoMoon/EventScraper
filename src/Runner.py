@@ -3,7 +3,7 @@ import os
 import time
 import traceback
 
-from requests.exceptions import HTTPError
+from urllib.error import HTTPError
 from slack_sdk.webhook import WebhookClient
 
 from src.db_cache import SQLiteDB
@@ -39,7 +39,14 @@ def runner(runner_submission: RunnerSubmission):
                             group_event_kernels: [GroupEventsKernel] = group_package.scraper_type_and_kernels[
                                 scraper_type]
                             for event_kernel in group_event_kernels:
-                                events: [EventsToUploadFromCalendarID] = scraper.retrieve_from_source(event_kernel)
+                                event_kernel: GroupEventsKernel
+                                try:
+                                    events: [EventsToUploadFromCalendarID] = scraper.retrieve_from_source(event_kernel)
+                                except HTTPError as err:
+                                    if err.code == 404:
+                                        logger.warning(f"The following group is no longer available: {event_kernel.group_name}")
+                                    else:
+                                        raise
                                 normalize_generic_event(events)
                                 publisher.upload(events)
                             scraper.close()
@@ -51,7 +58,7 @@ def runner(runner_submission: RunnerSubmission):
 
             continue_scraping = False
         except HTTPError as err:
-            if err.response.status_code == 500 and err.response.message == 'Too many requests':
+            if err.code == 500 and err.reason.lower() == 'Too many requests'.lower():
                 num_retries += 1
                 logger.warning("Going to sleep then retrying to scrape. Retry Num: " + num_retries)
                 time.sleep(120)

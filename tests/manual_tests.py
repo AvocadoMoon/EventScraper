@@ -3,7 +3,7 @@ import json
 import logging
 import os
 from datetime import timezone, timedelta, datetime
-
+from urllib.error import HTTPError
 from geopy.geocoders import Nominatim
 
 from src.db_cache import UploadedEventRow, SQLiteDB, UploadSource, ScraperTypes
@@ -118,7 +118,7 @@ def manual_test_ical():
 
     event = GenericEvent({"mobilizon": {"groupID": 10}}, "Title", "", "", "", "", "", None)
     event_kernel = GroupEventsKernel(event, "",
-         ["https://calendar.google.com/calendar/ical/bsbc.co_c4dt5esnmutedv7p3nu01aerhk%40group.calendar.google.com/public/basic.ics"],
+         ["https://calendar.google.com/calendar/ical/6lrbqnpdr3unfvr8oolv089hqu37nal6%40import.calendar.google.com/public/basic.ics"],
                                      ScraperTypes.ICAL, "")
     scraper.retrieve_from_source(event_kernel)
 
@@ -130,7 +130,13 @@ def manual_test_upload():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
-    # manual_test_ical()
+    # try:
+    #     manual_test_ical()
+    # except HTTPError as err:
+    #     if err.code == 404:
+    #         print("Hello")
+    #     else:
+    #         raise
     # manual_test_file_upload()
     # manualTestCreation()
     # manualTestGoogleCalendar(False)
